@@ -1,5 +1,5 @@
 import React from 'react';
-import ProductCard from '../components/ProductCard';
+import ProductCard from '.././components/ProductCard';
 
 const dummyProducts = [
   { id: 1, title: 'Maize', description: 'Fresh maize from Oromia', price: 20, imageUrl: 'https://via.placeholder.com/150', category: 'Cereal' },
