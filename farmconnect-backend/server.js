@@ -2,6 +2,11 @@ require('dotenv').config();
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
+const userRoutes = require('./routes/userRoutes');
+const productRoutes = require('./routes/productRoutes');
+const messageRoutes = require('./routes/messageRoutes');
+const articleRoutes = require('./routes/articleRoutes');
+const { errorHandler } = require('./middleware/errorMiddleware');
 
 const app = express();
 
@@ -31,3 +36,11 @@ mongoose.connect(MONGO_URI, {
 .catch((err) => {
   console.error('MongoDB connection error:', err);
 });
+
+app.use('/api/users', userRoutes);
+app.use('/api/products', productRoutes);
+app.use('/api/messages', messageRoutes);
+app.use('/api/articles', articleRoutes);
+
+// Error handler
+app.use(errorHandler);
