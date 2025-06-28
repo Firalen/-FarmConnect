@@ -66,6 +66,13 @@ const Navbar = () => {
               <span>💬</span>
               <span>Chat</span>
             </Link>
+            <Link
+              to="/orders"
+              className="text-white hover:text-green-200 transition-colors duration-200 font-medium flex items-center space-x-1"
+            >
+              <span>🛒</span>
+              <span>Orders</span>
+            </Link>
             {isAuthenticated && user?.role === 'admin' && (
               <Link 
                 to="/admin" 
@@ -202,6 +209,13 @@ const Navbar = () => {
                 onClick={() => setIsMenuOpen(false)}
               >
                 💬 Chat
+              </Link>
+              <Link
+                to="/orders"
+                className="text-white hover:text-green-200 block px-3 py-2 rounded-md text-base font-medium"
+                onClick={() => setIsMenuOpen(false)}
+              >
+                🛒 Orders
               </Link>
               {isAuthenticated && user?.role === 'admin' && (
                 <Link 

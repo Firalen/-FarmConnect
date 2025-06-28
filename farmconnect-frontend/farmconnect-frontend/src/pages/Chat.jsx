@@ -1,11 +1,313 @@
-import React from 'react';
+import React, { useState, useEffect, useRef } from 'react';
+import { useAuth } from '../context/AuthContext';
+import { messagesAPI } from '../services/api';
 
 const Chat = () => {
+  const { user, isAuthenticated } = useAuth();
+  const [conversations, setConversations] = useState([]);
+  const [selectedConversation, setSelectedConversation] = useState(null);
+  const [messages, setMessages] = useState([]);
+  const [newMessage, setNewMessage] = useState('');
+  const [loading, setLoading] = useState(true);
+  const [sending, setSending] = useState(false);
+  const messagesEndRef = useRef(null);
+
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  };
+
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages]);
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      fetchConversations();
+    }
+  }, [isAuthenticated]);
+
+  useEffect(() => {
+    if (selectedConversation) {
+      fetchMessages(selectedConversation._id);
+    }
+  }, [selectedConversation]);
+
+  const fetchConversations = async () => {
+    try {
+      setLoading(true);
+      const response = await messagesAPI.getConversations();
+      setConversations(response.data);
+    } catch (error) {
+      console.error('Error fetching conversations:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchMessages = async (conversationId) => {
+    try {
+      const response = await messagesAPI.getConversation(conversationId);
+      setMessages(response.data);
+    } catch (error) {
+      console.error('Error fetching messages:', error);
+    }
+  };
+
+  const sendMessage = async (e) => {
+    e.preventDefault();
+    if (!newMessage.trim() || !selectedConversation) return;
+
+    try {
+      setSending(true);
+      const messageData = {
+        content: newMessage,
+        receiverId: selectedConversation.participant._id,
+        conversationId: selectedConversation._id
+      };
+
+      await messagesAPI.create(messageData);
+      setNewMessage('');
+      
+      // Refresh messages
+      fetchMessages(selectedConversation._id);
+    } catch (error) {
+      console.error('Error sending message:', error);
+    } finally {
+      setSending(false);
+    }
+  };
+
+  const formatTime = (timestamp) => {
+    return new Date(timestamp).toLocaleTimeString([], { 
+      hour: '2-digit', 
+      minute: '2-digit' 
+    });
+  };
+
+  const formatDate = (timestamp) => {
+    const date = new Date(timestamp);
+    const today = new Date();
+    const yesterday = new Date(today);
+    yesterday.setDate(yesterday.getDate() - 1);
+
+    if (date.toDateString() === today.toDateString()) {
+      return 'Today';
+    } else if (date.toDateString() === yesterday.toDateString()) {
+      return 'Yesterday';
+    } else {
+      return date.toLocaleDateString();
+    }
+  };
+
+  if (!isAuthenticated) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-green-50 to-blue-50 py-8">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center py-12">
+            <div className="w-24 h-24 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <span className="text-3xl">💬</span>
+            </div>
+            <h3 className="text-xl font-semibold text-gray-800 mb-2">Login Required</h3>
+            <p className="text-gray-600 mb-6">Please login to access the chat feature</p>
+            <a
+              href="/login"
+              className="bg-green-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-green-700 transition-colors duration-200"
+            >
+              Login
+            </a>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="max-w-3xl mx-auto mt-10 p-6 bg-white rounded shadow">
-      <h2 className="text-2xl font-bold mb-4">Chat</h2>
-      {/* TODO: Add chat UI */}
-      <p>Chat functionality coming soon.</p>
+    <div className="min-h-screen bg-gradient-to-br from-green-50 to-blue-50 py-8">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="bg-white rounded-xl shadow-lg overflow-hidden">
+          <div className="grid grid-cols-1 lg:grid-cols-3 h-[600px]">
+            {/* Conversations List */}
+            <div className="border-r border-gray-200 bg-gray-50">
+              <div className="p-4 border-b border-gray-200">
+                <h2 className="text-lg font-semibold text-gray-800">Conversations</h2>
+              </div>
+              
+              {loading ? (
+                <div className="p-4 text-center">
+                  <div className="inline-flex items-center">
+                    <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-green-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    <span className="text-gray-600">Loading conversations...</span>
+                  </div>
+                </div>
+              ) : conversations.length === 0 ? (
+                <div className="p-4 text-center">
+                  <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                    <span className="text-2xl">💬</span>
+                  </div>
+                  <p className="text-gray-500 text-sm">No conversations yet</p>
+                  <p className="text-gray-400 text-xs mt-1">Start chatting with farmers or buyers</p>
+                </div>
+              ) : (
+                <div className="overflow-y-auto h-full">
+                  {conversations.map((conversation) => (
+                    <div
+                      key={conversation._id}
+                      onClick={() => setSelectedConversation(conversation)}
+                      className={`p-4 border-b border-gray-100 cursor-pointer hover:bg-gray-100 transition-colors duration-200 ${
+                        selectedConversation?._id === conversation._id ? 'bg-green-50 border-green-200' : ''
+                      }`}
+                    >
+                      <div className="flex items-center space-x-3">
+                        <div className="w-10 h-10 bg-green-500 rounded-full flex items-center justify-center">
+                          <span className="text-white font-semibold text-sm">
+                            {conversation.participant.name.charAt(0).toUpperCase()}
+                          </span>
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium text-gray-800 truncate">
+                            {conversation.participant.name}
+                          </p>
+                          <p className="text-xs text-gray-500 capitalize">
+                            {conversation.participant.role}
+                          </p>
+                          {conversation.lastMessage && (
+                            <p className="text-xs text-gray-600 truncate mt-1">
+                              {conversation.lastMessage.content}
+                            </p>
+                          )}
+                        </div>
+                        {conversation.lastMessage && (
+                          <div className="text-xs text-gray-400">
+                            {formatTime(conversation.lastMessage.createdAt)}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Chat Area */}
+            <div className="lg:col-span-2 flex flex-col">
+              {selectedConversation ? (
+                <>
+                  {/* Chat Header */}
+                  <div className="p-4 border-b border-gray-200 bg-white">
+                    <div className="flex items-center space-x-3">
+                      <div className="w-10 h-10 bg-green-500 rounded-full flex items-center justify-center">
+                        <span className="text-white font-semibold text-sm">
+                          {selectedConversation.participant.name.charAt(0).toUpperCase()}
+                        </span>
+                      </div>
+                      <div>
+                        <h3 className="font-semibold text-gray-800">
+                          {selectedConversation.participant.name}
+                        </h3>
+                        <p className="text-sm text-gray-500 capitalize">
+                          {selectedConversation.participant.role}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Messages */}
+                  <div className="flex-1 overflow-y-auto p-4 bg-gray-50">
+                    {messages.length === 0 ? (
+                      <div className="text-center py-8">
+                        <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                          <span className="text-2xl">💬</span>
+                        </div>
+                        <p className="text-gray-500">No messages yet</p>
+                        <p className="text-gray-400 text-sm mt-1">Start the conversation!</p>
+                      </div>
+                    ) : (
+                      <div className="space-y-4">
+                        {messages.map((message, index) => {
+                          const isOwnMessage = message.sender._id === user._id;
+                          const showDate = index === 0 || 
+                            formatDate(message.createdAt) !== formatDate(messages[index - 1].createdAt);
+
+                          return (
+                            <div key={message._id}>
+                              {showDate && (
+                                <div className="text-center mb-4">
+                                  <span className="bg-gray-200 text-gray-600 text-xs px-3 py-1 rounded-full">
+                                    {formatDate(message.createdAt)}
+                                  </span>
+                                </div>
+                              )}
+                              <div className={`flex ${isOwnMessage ? 'justify-end' : 'justify-start'}`}>
+                                <div className={`max-w-xs lg:max-w-md px-4 py-2 rounded-lg ${
+                                  isOwnMessage 
+                                    ? 'bg-green-500 text-white' 
+                                    : 'bg-white text-gray-800 border border-gray-200'
+                                }`}>
+                                  <p className="text-sm">{message.content}</p>
+                                  <p className={`text-xs mt-1 ${
+                                    isOwnMessage ? 'text-green-100' : 'text-gray-500'
+                                  }`}>
+                                    {formatTime(message.createdAt)}
+                                  </p>
+                                </div>
+                              </div>
+                            </div>
+                          );
+                        })}
+                        <div ref={messagesEndRef} />
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Message Input */}
+                  <div className="p-4 border-t border-gray-200 bg-white">
+                    <form onSubmit={sendMessage} className="flex space-x-3">
+                      <input
+                        type="text"
+                        value={newMessage}
+                        onChange={(e) => setNewMessage(e.target.value)}
+                        placeholder="Type your message..."
+                        className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                        disabled={sending}
+                      />
+                      <button
+                        type="submit"
+                        disabled={!newMessage.trim() || sending}
+                        className="px-6 py-2 bg-green-600 text-white rounded-lg font-medium hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
+                      >
+                        {sending ? (
+                          <div className="flex items-center">
+                            <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                            </svg>
+                            Sending...
+                          </div>
+                        ) : (
+                          'Send'
+                        )}
+                      </button>
+                    </form>
+                  </div>
+                </>
+              ) : (
+                <div className="flex-1 flex items-center justify-center">
+                  <div className="text-center">
+                    <div className="w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                      <span className="text-3xl">💬</span>
+                    </div>
+                    <h3 className="text-xl font-semibold text-gray-800 mb-2">Select a Conversation</h3>
+                    <p className="text-gray-600">Choose a conversation from the list to start chatting</p>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   );
 };

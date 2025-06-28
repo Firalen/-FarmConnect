@@ -93,6 +93,18 @@ export const messagesAPI = {
   update: (id, messageData) => api.put(`/messages/${id}`, messageData),
   delete: (id) => api.delete(`/messages/${id}`),
   getConversation: (userId) => api.get(`/messages/conversation/${userId}`),
+  getConversations: () => api.get('/messages/conversations'),
+  startConversation: (userId) => api.post('/messages/conversation', { receiverId: userId }),
+};
+
+// Orders API
+export const ordersAPI = {
+  create: (orderData) => api.post('/orders', orderData),
+  getAll: () => api.get('/orders'),
+  getById: (id) => api.get(`/orders/${id}`),
+  updateStatus: (id, status) => api.put(`/orders/${id}/status`, { status }),
+  cancel: (id) => api.put(`/orders/${id}/cancel`),
+  getStats: () => api.get('/orders/stats'),
 };
 
 // Dashboard API

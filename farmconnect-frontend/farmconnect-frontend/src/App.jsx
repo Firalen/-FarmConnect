@@ -11,6 +11,7 @@ import ProductDetail from './pages/ProductDetail';
 import AddProduct from './pages/AddProduct';
 import Articles from './pages/Articles';
 import Chat from './pages/Chat';
+import Orders from './pages/Orders';
 import Admin from './pages/Admin';
 
 const App = () => (
@@ -28,6 +29,7 @@ const App = () => (
             <Route path="/add-product" element={<AddProduct />} />
             <Route path="/articles" element={<Articles />} />
             <Route path="/chat" element={<Chat />} />
+            <Route path="/orders" element={<Orders />} />
             <Route path="/admin" element={<Admin />} />
           </Routes>
         </main>
