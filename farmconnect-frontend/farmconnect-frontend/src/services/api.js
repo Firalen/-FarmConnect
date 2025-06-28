@@ -114,4 +114,12 @@ export const dashboardAPI = {
   getRecentOrders: () => api.get('/dashboard/recent-orders'),
 };
 
+// Users API
+export const usersAPI = {
+  getAll: () => api.get('/users'),
+  getById: (id) => api.get(`/users/${id}`),
+  updateProfile: (userData) => api.put('/users/profile', userData),
+  getProfile: () => api.get('/users/profile'),
+};
+
 export default api; 

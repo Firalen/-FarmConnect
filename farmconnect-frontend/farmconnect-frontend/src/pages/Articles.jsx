@@ -11,6 +11,18 @@ const Articles = () => {
   const [selectedCategory, setSelectedCategory] = useState('All');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [showAddForm, setShowAddForm] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+
+  // Add Article Form State
+  const [articleForm, setArticleForm] = useState({
+    title: '',
+    content: '',
+    excerpt: '',
+    category: 'Farming Tips',
+    imageUrl: '',
+    readTime: '5 min read'
+  });
 
   const categories = ['All', 'Farming Tips', 'Market Trends', 'Technology', 'Sustainability', 'Health & Nutrition'];
 
@@ -122,6 +134,51 @@ const Articles = () => {
     });
   };
 
+  const handleAddArticle = async (e) => {
+    e.preventDefault();
+    
+    if (!articleForm.title || !articleForm.content || !articleForm.excerpt) {
+      setError('Please fill in all required fields');
+      return;
+    }
+
+    try {
+      setSubmitting(true);
+      setError(null);
+      
+      const articleData = {
+        ...articleForm,
+        author: {
+          name: user.name,
+          role: user.role === 'admin' ? 'Admin' : 'Expert'
+        }
+      };
+
+      await articlesAPI.create(articleData);
+      
+      // Reset form and close modal
+      setArticleForm({
+        title: '',
+        content: '',
+        excerpt: '',
+        category: 'Farming Tips',
+        imageUrl: '',
+        readTime: '5 min read'
+      });
+      setShowAddForm(false);
+      
+      // Refresh articles
+      fetchArticles();
+    } catch (err) {
+      console.error('Error creating article:', err);
+      setError('Failed to create article. Please try again.');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const canAddArticle = isAuthenticated && (user?.role === 'admin' || user?.role === 'expert');
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-green-50 to-blue-50 py-8">
@@ -145,7 +202,19 @@ const Articles = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
         <div className="text-center mb-12">
-          <h1 className="text-4xl font-bold text-gray-800 mb-4">Advisory Articles</h1>
+          <div className="flex justify-between items-center mb-4">
+            <div></div>
+            <h1 className="text-4xl font-bold text-gray-800">Advisory Articles</h1>
+            {canAddArticle && (
+              <button
+                onClick={() => setShowAddForm(true)}
+                className="bg-green-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-green-700 transition-colors duration-200 flex items-center space-x-2"
+              >
+                <span>✏️</span>
+                <span>Add Article</span>
+              </button>
+            )}
+          </div>
           <p className="text-gray-600 text-lg max-w-3xl mx-auto">
             Stay informed with the latest farming tips, market trends, and agricultural insights from experts in the field.
           </p>
@@ -155,6 +224,131 @@ const Articles = () => {
         {error && (
           <div className="mb-8 p-4 bg-red-50 border border-red-200 rounded-lg">
             <p className="text-red-600 text-sm">{error}</p>
+          </div>
+        )}
+
+        {/* Add Article Modal */}
+        {showAddForm && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+            <div className="bg-white rounded-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+              <div className="p-6 border-b border-gray-200">
+                <div className="flex justify-between items-center">
+                  <h2 className="text-2xl font-bold text-gray-800">Add New Article</h2>
+                  <button
+                    onClick={() => setShowAddForm(false)}
+                    className="text-gray-500 hover:text-gray-700"
+                  >
+                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
+                </div>
+              </div>
+              
+              <form onSubmit={handleAddArticle} className="p-6 space-y-6">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Title *
+                  </label>
+                  <input
+                    type="text"
+                    value={articleForm.title}
+                    onChange={(e) => setArticleForm({...articleForm, title: e.target.value})}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                    placeholder="Enter article title"
+                    required
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Excerpt *
+                  </label>
+                  <textarea
+                    value={articleForm.excerpt}
+                    onChange={(e) => setArticleForm({...articleForm, excerpt: e.target.value})}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                    placeholder="Brief summary of the article"
+                    rows="3"
+                    required
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Content *
+                  </label>
+                  <textarea
+                    value={articleForm.content}
+                    onChange={(e) => setArticleForm({...articleForm, content: e.target.value})}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                    placeholder="Full article content"
+                    rows="8"
+                    required
+                  />
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Category
+                    </label>
+                    <select
+                      value={articleForm.category}
+                      onChange={(e) => setArticleForm({...articleForm, category: e.target.value})}
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                    >
+                      {categories.filter(cat => cat !== 'All').map(category => (
+                        <option key={category} value={category}>{category}</option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Read Time
+                    </label>
+                    <input
+                      type="text"
+                      value={articleForm.readTime}
+                      onChange={(e) => setArticleForm({...articleForm, readTime: e.target.value})}
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                      placeholder="e.g., 5 min read"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Image URL
+                  </label>
+                  <input
+                    type="url"
+                    value={articleForm.imageUrl}
+                    onChange={(e) => setArticleForm({...articleForm, imageUrl: e.target.value})}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                    placeholder="https://example.com/image.jpg"
+                  />
+                </div>
+
+                <div className="flex justify-end space-x-4 pt-4">
+                  <button
+                    type="button"
+                    onClick={() => setShowAddForm(false)}
+                    className="px-6 py-3 border border-gray-300 text-gray-700 rounded-lg font-medium hover:bg-gray-50 transition-colors duration-200"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={submitting}
+                    className="px-6 py-3 bg-green-600 text-white rounded-lg font-medium hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
+                  >
+                    {submitting ? 'Publishing...' : 'Publish Article'}
+                  </button>
+                </div>
+              </form>
+            </div>
           </div>
         )}
 
