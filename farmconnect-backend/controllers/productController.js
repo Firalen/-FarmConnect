@@ -16,7 +16,8 @@ exports.createProduct = async (req, res) => {
       imageUrl = `${baseUrl}/uploads/${req.file.filename}`;
     }
 
-    const product = await Product.create({
+    // Prepare product data
+    const productData = {
       title,
       description,
       price: parseFloat(price),
@@ -24,13 +25,23 @@ exports.createProduct = async (req, res) => {
       category,
       unit: unit || 'kg',
       location,
-      isOrganic: isOrganic === 'true',
-      isAvailable: isAvailable === 'true',
+      isOrganic: isOrganic === 'true' || isOrganic === true,
+      isAvailable: isAvailable === 'true' || isAvailable === true,
       imageUrl,
-      farmerId: farmerId || req.user._id,
       farmerName: farmerName || req.user.name,
       postedBy: req.user._id,
-    });
+    };
+
+    // Only add farmerId if it's provided and valid
+    if (farmerId && farmerId !== req.user._id.toString()) {
+      productData.farmerId = farmerId;
+    } else {
+      productData.farmerId = req.user._id;
+    }
+
+    console.log('Creating product with data:', productData);
+
+    const product = await Product.create(productData);
     
     res.status(201).json(product);
   } catch (err) {

@@ -168,7 +168,9 @@ const AddProduct = () => {
       const submitData = new FormData();
       
       // Add file
-      submitData.append('image', selectedFile);
+      if (selectedFile) {
+        submitData.append('image', selectedFile);
+      }
       
       // Add other form data
       Object.keys(formData).forEach(key => {
@@ -179,11 +181,19 @@ const AddProduct = () => {
       submitData.append('farmerId', user._id);
       submitData.append('farmerName', user.name);
 
-      await productsAPI.create(submitData);
+      console.log('Submitting product data:', {
+        formData,
+        selectedFile: selectedFile ? selectedFile.name : 'No file',
+        user: { id: user._id, name: user.name }
+      });
+
+      const response = await productsAPI.create(submitData);
+      console.log('Product created successfully:', response.data);
       navigate('/products');
     } catch (error) {
       console.error('Error creating product:', error);
-      setErrors({ submit: 'Failed to create product. Please try again.' });
+      console.error('Error response:', error.response?.data);
+      setErrors({ submit: `Failed to create product: ${error.response?.data?.message || error.message}` });
     } finally {
       setIsLoading(false);
     }

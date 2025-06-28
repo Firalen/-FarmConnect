@@ -54,7 +54,7 @@ export const productsAPI = {
     if (productData instanceof FormData) {
       return api.post('/products', productData, {
         headers: {
-          'Content-Type': 'multipart/form-data',
+          // Don't set Content-Type for FormData, let the browser set it with boundary
         },
       });
     }
@@ -65,7 +65,7 @@ export const productsAPI = {
     if (productData instanceof FormData) {
       return api.put(`/products/${id}`, productData, {
         headers: {
-          'Content-Type': 'multipart/form-data',
+          // Don't set Content-Type for FormData, let the browser set it with boundary
         },
       });
     }
