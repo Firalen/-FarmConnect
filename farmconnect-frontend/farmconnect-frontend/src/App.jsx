@@ -8,6 +8,7 @@ import Register from './pages/Register';
 import Dashboard from './pages/Dashboard';
 import Products from './pages/Products';
 import ProductDetail from './pages/ProductDetail';
+import AddProduct from './pages/AddProduct';
 import Articles from './pages/Articles';
 import Chat from './pages/Chat';
 import Admin from './pages/Admin';
@@ -24,6 +25,7 @@ const App = () => (
             <Route path="/register" element={<Register />} />
             <Route path="/products" element={<Products />} />
             <Route path="/products/:id" element={<ProductDetail />} />
+            <Route path="/add-product" element={<AddProduct />} />
             <Route path="/articles" element={<Articles />} />
             <Route path="/chat" element={<Chat />} />
             <Route path="/admin" element={<Admin />} />

@@ -43,6 +43,15 @@ const Navbar = () => {
               <span>🌾</span>
               <span>Products</span>
             </Link>
+            {isAuthenticated && user?.role === 'farmer' && (
+              <Link 
+                to="/add-product" 
+                className="text-white hover:text-green-200 transition-colors duration-200 font-medium flex items-center space-x-1"
+              >
+                <span>➕</span>
+                <span>Add Product</span>
+              </Link>
+            )}
             <Link 
               to="/articles" 
               className="text-white hover:text-green-200 transition-colors duration-200 font-medium flex items-center space-x-1"
@@ -100,6 +109,15 @@ const Navbar = () => {
                     >
                       Dashboard
                     </Link>
+                    {user?.role === 'farmer' && (
+                      <Link
+                        to="/add-product"
+                        className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                        onClick={() => setIsUserMenuOpen(false)}
+                      >
+                        Add Product
+                      </Link>
+                    )}
                     <Link
                       to="/profile"
                       className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
@@ -162,6 +180,15 @@ const Navbar = () => {
               >
                 🌾 Products
               </Link>
+              {isAuthenticated && user?.role === 'farmer' && (
+                <Link 
+                  to="/add-product" 
+                  className="text-white hover:text-green-200 block px-3 py-2 rounded-md text-base font-medium"
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  ➕ Add Product
+                </Link>
+              )}
               <Link 
                 to="/articles" 
                 className="text-white hover:text-green-200 block px-3 py-2 rounded-md text-base font-medium"
@@ -199,6 +226,15 @@ const Navbar = () => {
                     >
                       Dashboard
                     </Link>
+                    {user?.role === 'farmer' && (
+                      <Link 
+                        to="/add-product" 
+                        className="text-white hover:text-green-200 block px-3 py-2 rounded-md text-base font-medium"
+                        onClick={() => setIsMenuOpen(false)}
+                      >
+                        Add Product
+                      </Link>
+                    )}
                     <Link 
                       to="/profile" 
                       className="text-white hover:text-green-200 block px-3 py-2 rounded-md text-base font-medium"

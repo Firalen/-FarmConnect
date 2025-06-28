@@ -1,10 +1,13 @@
 import React, { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import ProductCard from '.././components/ProductCard';
 import { productsAPI } from '../services/api';
+import { useAuth } from '../context/AuthContext';
 
 const categories = ['All', 'Cereal', 'Vegetables', 'Dairy', 'Beverages'];
 
 const Products = () => {
+  const { user, isAuthenticated } = useAuth();
   const [products, setProducts] = useState([]);
   const [filteredProducts, setFilteredProducts] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
@@ -108,7 +111,19 @@ const Products = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
         <div className="text-center mb-12">
-          <h1 className="text-4xl font-bold text-gray-800 mb-4">Our Products</h1>
+          <div className="flex justify-between items-center mb-4">
+            <div></div>
+            <h1 className="text-4xl font-bold text-gray-800">Our Products</h1>
+            {isAuthenticated && user?.role === 'farmer' && (
+              <Link
+                to="/add-product"
+                className="bg-green-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-green-700 transition-colors duration-200 flex items-center space-x-2"
+              >
+                <span>➕</span>
+                <span>Add Product</span>
+              </Link>
+            )}
+          </div>
           <p className="text-gray-600 text-lg max-w-2xl mx-auto">
             Discover fresh, local produce from trusted farmers across Ethiopia. Support sustainable agriculture and enjoy the best quality products.
           </p>
