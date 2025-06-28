@@ -1,20 +1,40 @@
 const Product = require('../models/Product');
+const fs = require('fs');
+const path = require('path');
 
 // Create product
 exports.createProduct = async (req, res) => {
   try {
-    const { title, description, price, quantity, imageUrl, category } = req.body;
+    const { title, description, price, quantity, category, unit, location, isOrganic, isAvailable, farmerId, farmerName } = req.body;
+    
+    let imageUrl = '';
+    
+    // Handle file upload
+    if (req.file) {
+      // Create the full URL for the uploaded image
+      const baseUrl = `${req.protocol}://${req.get('host')}`;
+      imageUrl = `${baseUrl}/uploads/${req.file.filename}`;
+    }
+
     const product = await Product.create({
       title,
       description,
-      price,
-      quantity,
-      imageUrl,
+      price: parseFloat(price),
+      quantity: parseFloat(quantity),
       category,
+      unit: unit || 'kg',
+      location,
+      isOrganic: isOrganic === 'true',
+      isAvailable: isAvailable === 'true',
+      imageUrl,
+      farmerId: farmerId || req.user._id,
+      farmerName: farmerName || req.user.name,
       postedBy: req.user._id,
     });
+    
     res.status(201).json(product);
   } catch (err) {
+    console.error('Error creating product:', err);
     res.status(500).json({ message: err.message });
   }
 };
@@ -48,7 +68,25 @@ exports.updateProduct = async (req, res) => {
     if (product.postedBy.toString() !== req.user._id.toString()) {
       return res.status(403).json({ message: 'Not authorized' });
     }
+    
     const updates = req.body;
+    
+    // Handle file upload for updates
+    if (req.file) {
+      // Delete old image if it exists
+      if (product.imageUrl) {
+        const oldImagePath = product.imageUrl.replace(`${req.protocol}://${req.get('host')}/uploads/`, '');
+        const fullOldPath = path.join(__dirname, '../uploads', oldImagePath);
+        if (fs.existsSync(fullOldPath)) {
+          fs.unlinkSync(fullOldPath);
+        }
+      }
+      
+      // Create new image URL
+      const baseUrl = `${req.protocol}://${req.get('host')}`;
+      updates.imageUrl = `${baseUrl}/uploads/${req.file.filename}`;
+    }
+    
     Object.assign(product, updates);
     await product.save();
     res.json(product);
@@ -65,6 +103,16 @@ exports.deleteProduct = async (req, res) => {
     if (product.postedBy.toString() !== req.user._id.toString()) {
       return res.status(403).json({ message: 'Not authorized' });
     }
+    
+    // Delete associated image file
+    if (product.imageUrl) {
+      const imagePath = product.imageUrl.replace(`${req.protocol}://${req.get('host')}/uploads/`, '');
+      const fullImagePath = path.join(__dirname, '../uploads', imagePath);
+      if (fs.existsSync(fullImagePath)) {
+        fs.unlinkSync(fullImagePath);
+      }
+    }
+    
     await product.deleteOne();
     res.json({ message: 'Product deleted' });
   } catch (err) {

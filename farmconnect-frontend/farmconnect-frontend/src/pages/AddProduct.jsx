@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { productsAPI } from '../services/api';
 import { useAuth } from '../context/AuthContext';
@@ -6,13 +6,13 @@ import { useAuth } from '../context/AuthContext';
 const AddProduct = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const fileInputRef = useRef(null);
   
   const [formData, setFormData] = useState({
     title: '',
     description: '',
     price: '',
     category: '',
-    imageUrl: '',
     quantity: '',
     unit: 'kg',
     location: '',
@@ -22,7 +22,9 @@ const AddProduct = () => {
   
   const [errors, setErrors] = useState({});
   const [isLoading, setIsLoading] = useState(false);
+  const [selectedFile, setSelectedFile] = useState(null);
   const [imagePreview, setImagePreview] = useState('');
+  const [isDragOver, setIsDragOver] = useState(false);
 
   const categories = [
     'Cereal',
@@ -49,10 +51,66 @@ const AddProduct = () => {
     if (errors[name]) {
       setErrors(prev => ({ ...prev, [name]: '' }));
     }
+  };
 
-    // Handle image preview
-    if (name === 'imageUrl' && value) {
-      setImagePreview(value);
+  const handleFileSelect = (file) => {
+    if (file) {
+      // Validate file type
+      if (!file.type.startsWith('image/')) {
+        setErrors(prev => ({ ...prev, image: 'Please select a valid image file' }));
+        return;
+      }
+
+      // Validate file size (max 5MB)
+      if (file.size > 5 * 1024 * 1024) {
+        setErrors(prev => ({ ...prev, image: 'Image size should be less than 5MB' }));
+        return;
+      }
+
+      setSelectedFile(file);
+      setErrors(prev => ({ ...prev, image: '' }));
+
+      // Create preview
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        setImagePreview(e.target.result);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleFileInputChange = (e) => {
+    const file = e.target.files[0];
+    handleFileSelect(file);
+  };
+
+  const handleDragOver = (e) => {
+    e.preventDefault();
+    setIsDragOver(true);
+  };
+
+  const handleDragLeave = (e) => {
+    e.preventDefault();
+    setIsDragOver(false);
+  };
+
+  const handleDrop = (e) => {
+    e.preventDefault();
+    setIsDragOver(false);
+    
+    const file = e.dataTransfer.files[0];
+    handleFileSelect(file);
+  };
+
+  const handleDropZoneClick = () => {
+    fileInputRef.current?.click();
+  };
+
+  const removeImage = () => {
+    setSelectedFile(null);
+    setImagePreview('');
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
     }
   };
 
@@ -86,6 +144,10 @@ const AddProduct = () => {
     if (!formData.location.trim()) {
       newErrors.location = 'Location is required';
     }
+
+    if (!selectedFile) {
+      newErrors.image = 'Product image is required';
+    }
     
     return newErrors;
   };
@@ -102,15 +164,22 @@ const AddProduct = () => {
     setIsLoading(true);
     
     try {
-      const productData = {
-        ...formData,
-        price: parseFloat(formData.price),
-        quantity: parseFloat(formData.quantity),
-        farmerId: user._id,
-        farmerName: user.name
-      };
+      // Create FormData for file upload
+      const submitData = new FormData();
+      
+      // Add file
+      submitData.append('image', selectedFile);
+      
+      // Add other form data
+      Object.keys(formData).forEach(key => {
+        submitData.append(key, formData[key]);
+      });
+      
+      // Add user data
+      submitData.append('farmerId', user._id);
+      submitData.append('farmerName', user.name);
 
-      await productsAPI.create(productData);
+      await productsAPI.create(submitData);
       navigate('/products');
     } catch (error) {
       console.error('Error creating product:', error);
@@ -297,47 +366,70 @@ const AddProduct = () => {
               )}
             </div>
 
-            {/* Image URL */}
+            {/* Image Upload */}
             <div>
-              <label htmlFor="imageUrl" className="block text-sm font-medium text-gray-700 mb-2">
-                Product Image URL
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Product Image *
               </label>
+              
+              {/* Hidden file input */}
               <input
-                id="imageUrl"
-                name="imageUrl"
-                type="url"
-                value={formData.imageUrl}
-                onChange={handleChange}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent transition-colors duration-200"
-                placeholder="https://example.com/image.jpg"
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                onChange={handleFileInputChange}
+                className="hidden"
               />
-              <p className="mt-1 text-sm text-gray-500">
-                Provide a URL to an image of your product
-              </p>
-            </div>
 
-            {/* Image Preview */}
-            {imagePreview && (
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Image Preview
-                </label>
-                <div className="w-full h-48 bg-gray-100 rounded-lg overflow-hidden">
-                  <img
-                    src={imagePreview}
-                    alt="Product preview"
-                    className="w-full h-full object-cover"
-                    onError={(e) => {
-                      e.target.style.display = 'none';
-                      e.target.nextSibling.style.display = 'flex';
-                    }}
-                  />
-                  <div className="hidden w-full h-full items-center justify-center text-gray-500">
-                    <span>Image not available</span>
+              {/* Drop zone */}
+              <div
+                onClick={handleDropZoneClick}
+                onDragOver={handleDragOver}
+                onDragLeave={handleDragLeave}
+                onDrop={handleDrop}
+                className={`border-2 border-dashed rounded-lg p-8 text-center cursor-pointer transition-colors duration-200 ${
+                  isDragOver 
+                    ? 'border-green-500 bg-green-50' 
+                    : errors.image 
+                      ? 'border-red-500 bg-red-50' 
+                      : 'border-gray-300 bg-gray-50 hover:border-green-400 hover:bg-green-50'
+                }`}
+              >
+                {imagePreview ? (
+                  <div className="relative">
+                    <img
+                      src={imagePreview}
+                      alt="Product preview"
+                      className="w-full h-48 object-cover rounded-lg mx-auto"
+                    />
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        removeImage();
+                      }}
+                      className="absolute top-2 right-2 bg-red-500 text-white rounded-full w-8 h-8 flex items-center justify-center hover:bg-red-600 transition-colors duration-200"
+                    >
+                      ×
+                    </button>
                   </div>
-                </div>
+                ) : (
+                  <div>
+                    <div className="text-4xl mb-4">📷</div>
+                    <p className="text-lg font-medium text-gray-700 mb-2">
+                      Click to upload or drag and drop
+                    </p>
+                    <p className="text-sm text-gray-500">
+                      PNG, JPG, GIF up to 5MB
+                    </p>
+                  </div>
+                )}
               </div>
-            )}
+              
+              {errors.image && (
+                <p className="mt-1 text-sm text-red-600">{errors.image}</p>
+              )}
+            </div>
 
             {/* Checkboxes */}
             <div className="space-y-4">

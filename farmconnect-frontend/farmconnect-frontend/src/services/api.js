@@ -49,8 +49,28 @@ export const authAPI = {
 export const productsAPI = {
   getAll: (params = {}) => api.get('/products', { params }),
   getById: (id) => api.get(`/products/${id}`),
-  create: (productData) => api.post('/products', productData),
-  update: (id, productData) => api.put(`/products/${id}`, productData),
+  create: (productData) => {
+    // If productData is FormData, don't set Content-Type header
+    if (productData instanceof FormData) {
+      return api.post('/products', productData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      });
+    }
+    return api.post('/products', productData);
+  },
+  update: (id, productData) => {
+    // If productData is FormData, don't set Content-Type header
+    if (productData instanceof FormData) {
+      return api.put(`/products/${id}`, productData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      });
+    }
+    return api.put(`/products/${id}`, productData);
+  },
   delete: (id) => api.delete(`/products/${id}`),
   getByCategory: (category) => api.get(`/products/category/${category}`),
   search: (query) => api.get(`/products/search?q=${query}`),
