@@ -1,13 +1,16 @@
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 
 const Register = () => {
+  const navigate = useNavigate();
+  const { register, error: authError, clearError } = useAuth();
+  
   const [formData, setFormData] = useState({
-    firstName: '',
-    lastName: '',
+    name: '',
     email: '',
-    phone: '',
-    userType: 'consumer',
+    phoneNumber: '',
+    role: 'farmer',
     password: '',
     confirmPassword: '',
     agreeToTerms: false
@@ -24,17 +27,16 @@ const Register = () => {
     if (errors[name]) {
       setErrors(prev => ({ ...prev, [name]: '' }));
     }
+    if (authError) {
+      clearError();
+    }
   };
 
   const validateForm = () => {
     const newErrors = {};
     
-    if (!formData.firstName.trim()) {
-      newErrors.firstName = 'First name is required';
-    }
-    
-    if (!formData.lastName.trim()) {
-      newErrors.lastName = 'Last name is required';
+    if (!formData.name.trim()) {
+      newErrors.name = 'Full name is required';
     }
     
     if (!formData.email) {
@@ -43,14 +45,10 @@ const Register = () => {
       newErrors.email = 'Email is invalid';
     }
     
-    if (!formData.phone.trim()) {
-      newErrors.phone = 'Phone number is required';
-    }
-    
     if (!formData.password) {
       newErrors.password = 'Password is required';
-    } else if (formData.password.length < 8) {
-      newErrors.password = 'Password must be at least 8 characters';
+    } else if (formData.password.length < 6) {
+      newErrors.password = 'Password must be at least 6 characters';
     }
     
     if (!formData.confirmPassword) {
@@ -76,10 +74,25 @@ const Register = () => {
     }
 
     setIsLoading(true);
-    setTimeout(() => {
+    clearError();
+    
+    try {
+      const result = await register({
+        name: formData.name,
+        email: formData.email,
+        phoneNumber: formData.phoneNumber,
+        role: formData.role,
+        password: formData.password
+      });
+      
+      if (result.success) {
+        navigate('/');
+      }
+    } catch (error) {
+      console.error('Registration error:', error);
+    } finally {
       setIsLoading(false);
-      console.log('Registration attempt:', formData);
-    }, 2000);
+    }
   };
 
   return (
@@ -96,6 +109,13 @@ const Register = () => {
         </div>
 
         <div className="bg-white rounded-xl shadow-lg p-8">
+          {/* Auth Error Display */}
+          {authError && (
+            <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
+              <p className="text-red-600 text-sm">{authError}</p>
+            </div>
+          )}
+
           <form onSubmit={handleSubmit} className="space-y-6">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-3">
@@ -103,30 +123,30 @@ const Register = () => {
               </label>
               <div className="grid grid-cols-2 gap-3">
                 <label className={`relative flex cursor-pointer rounded-lg border p-4 focus:outline-none ${
-                  formData.userType === 'consumer' 
+                  formData.role === 'buyer' 
                     ? 'border-green-500 bg-green-50' 
                     : 'border-gray-300 bg-white'
                 }`}>
                   <input
                     type="radio"
-                    name="userType"
-                    value="consumer"
-                    checked={formData.userType === 'consumer'}
+                    name="role"
+                    value="buyer"
+                    checked={formData.role === 'buyer'}
                     onChange={handleChange}
                     className="sr-only"
                   />
                   <div className="flex w-full items-center justify-between">
                     <div className="flex items-center">
                       <div className="text-sm">
-                        <p className={`font-medium ${formData.userType === 'consumer' ? 'text-green-900' : 'text-gray-900'}`}>
+                        <p className={`font-medium ${formData.role === 'buyer' ? 'text-green-900' : 'text-gray-900'}`}>
                           Consumer
                         </p>
-                        <p className={`${formData.userType === 'consumer' ? 'text-green-700' : 'text-gray-500'}`}>
+                        <p className={`${formData.role === 'buyer' ? 'text-green-700' : 'text-gray-500'}`}>
                           Buy fresh products
                         </p>
                       </div>
                     </div>
-                    <div className={`shrink-0 ${formData.userType === 'consumer' ? 'text-green-600' : 'text-gray-400'}`}>
+                    <div className={`shrink-0 ${formData.role === 'buyer' ? 'text-green-600' : 'text-gray-400'}`}>
                       <svg className="h-6 w-6" fill="currentColor" viewBox="0 0 24 24">
                         <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
                       </svg>
@@ -135,30 +155,30 @@ const Register = () => {
                 </label>
                 
                 <label className={`relative flex cursor-pointer rounded-lg border p-4 focus:outline-none ${
-                  formData.userType === 'farmer' 
+                  formData.role === 'farmer' 
                     ? 'border-green-500 bg-green-50' 
                     : 'border-gray-300 bg-white'
                 }`}>
                   <input
                     type="radio"
-                    name="userType"
+                    name="role"
                     value="farmer"
-                    checked={formData.userType === 'farmer'}
+                    checked={formData.role === 'farmer'}
                     onChange={handleChange}
                     className="sr-only"
                   />
                   <div className="flex w-full items-center justify-between">
                     <div className="flex items-center">
                       <div className="text-sm">
-                        <p className={`font-medium ${formData.userType === 'farmer' ? 'text-green-900' : 'text-gray-900'}`}>
+                        <p className={`font-medium ${formData.role === 'farmer' ? 'text-green-900' : 'text-gray-900'}`}>
                           Farmer
                         </p>
-                        <p className={`${formData.userType === 'farmer' ? 'text-green-700' : 'text-gray-500'}`}>
+                        <p className={`${formData.role === 'farmer' ? 'text-green-700' : 'text-gray-500'}`}>
                           Sell your products
                         </p>
                       </div>
                     </div>
-                    <div className={`shrink-0 ${formData.userType === 'farmer' ? 'text-green-600' : 'text-gray-400'}`}>
+                    <div className={`shrink-0 ${formData.role === 'farmer' ? 'text-green-600' : 'text-gray-400'}`}>
                       <svg className="h-6 w-6" fill="currentColor" viewBox="0 0 24 24">
                         <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
                       </svg>
@@ -168,50 +188,26 @@ const Register = () => {
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label htmlFor="firstName" className="block text-sm font-medium text-gray-700 mb-2">
-                  First name
-                </label>
-                <input
-                  id="firstName"
-                  name="firstName"
-                  type="text"
-                  autoComplete="given-name"
-                  required
-                  value={formData.firstName}
-                  onChange={handleChange}
-                  className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent transition-colors duration-200 ${
-                    errors.firstName ? 'border-red-500' : 'border-gray-300'
-                  }`}
-                  placeholder="First name"
-                />
-                {errors.firstName && (
-                  <p className="mt-1 text-sm text-red-600">{errors.firstName}</p>
-                )}
-              </div>
-              
-              <div>
-                <label htmlFor="lastName" className="block text-sm font-medium text-gray-700 mb-2">
-                  Last name
-                </label>
-                <input
-                  id="lastName"
-                  name="lastName"
-                  type="text"
-                  autoComplete="family-name"
-                  required
-                  value={formData.lastName}
-                  onChange={handleChange}
-                  className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent transition-colors duration-200 ${
-                    errors.lastName ? 'border-red-500' : 'border-gray-300'
-                  }`}
-                  placeholder="Last name"
-                />
-                {errors.lastName && (
-                  <p className="mt-1 text-sm text-red-600">{errors.lastName}</p>
-                )}
-              </div>
+            <div>
+              <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-2">
+                Full name
+              </label>
+              <input
+                id="name"
+                name="name"
+                type="text"
+                autoComplete="name"
+                required
+                value={formData.name}
+                onChange={handleChange}
+                className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent transition-colors duration-200 ${
+                  errors.name ? 'border-red-500' : 'border-gray-300'
+                }`}
+                placeholder="Enter your full name"
+              />
+              {errors.name && (
+                <p className="mt-1 text-sm text-red-600">{errors.name}</p>
+              )}
             </div>
 
             <div>
@@ -237,25 +233,19 @@ const Register = () => {
             </div>
 
             <div>
-              <label htmlFor="phone" className="block text-sm font-medium text-gray-700 mb-2">
-                Phone number
+              <label htmlFor="phoneNumber" className="block text-sm font-medium text-gray-700 mb-2">
+                Phone number (optional)
               </label>
               <input
-                id="phone"
-                name="phone"
+                id="phoneNumber"
+                name="phoneNumber"
                 type="tel"
                 autoComplete="tel"
-                required
-                value={formData.phone}
+                value={formData.phoneNumber}
                 onChange={handleChange}
-                className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent transition-colors duration-200 ${
-                  errors.phone ? 'border-red-500' : 'border-gray-300'
-                }`}
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent transition-colors duration-200"
                 placeholder="+251 911 123 456"
               />
-              {errors.phone && (
-                <p className="mt-1 text-sm text-red-600">{errors.phone}</p>
-              )}
             </div>
 
             <div>

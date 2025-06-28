@@ -1,7 +1,11 @@
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 
 const Login = () => {
+  const navigate = useNavigate();
+  const { login, error: authError, clearError } = useAuth();
+  
   const [formData, setFormData] = useState({
     email: '',
     password: '',
@@ -19,6 +23,10 @@ const Login = () => {
     // Clear error when user starts typing
     if (errors[name]) {
       setErrors(prev => ({ ...prev, [name]: '' }));
+    }
+    // Clear auth error when user starts typing
+    if (authError) {
+      clearError();
     }
   };
 
@@ -47,12 +55,22 @@ const Login = () => {
     }
 
     setIsLoading(true);
-    // Simulate API call
-    setTimeout(() => {
+    clearError();
+    
+    try {
+      const result = await login({
+        email: formData.email,
+        password: formData.password
+      });
+      
+      if (result.success) {
+        navigate('/');
+      }
+    } catch (error) {
+      console.error('Login error:', error);
+    } finally {
       setIsLoading(false);
-      // Handle login logic here
-      console.log('Login attempt:', formData);
-    }, 2000);
+    }
   };
 
   return (
@@ -71,6 +89,13 @@ const Login = () => {
 
         {/* Login Form */}
         <div className="bg-white rounded-xl shadow-lg p-8">
+          {/* Auth Error Display */}
+          {authError && (
+            <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
+              <p className="text-red-600 text-sm">{authError}</p>
+            </div>
+          )}
+
           <form onSubmit={handleSubmit} className="space-y-6">
             {/* Email Field */}
             <div>

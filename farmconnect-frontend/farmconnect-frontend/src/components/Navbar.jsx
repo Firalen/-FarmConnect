@@ -1,11 +1,23 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 
 const Navbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
+  const { user, logout, isAuthenticated, getUserDisplayName, getUserInitial } = useAuth();
 
   const toggleMenu = () => {
     setIsMenuOpen(!isMenuOpen);
+  };
+
+  const toggleUserMenu = () => {
+    setIsUserMenuOpen(!isUserMenuOpen);
+  };
+
+  const handleLogout = () => {
+    logout();
+    setIsUserMenuOpen(false);
   };
 
   return (
@@ -45,27 +57,81 @@ const Navbar = () => {
               <span>💬</span>
               <span>Chat</span>
             </Link>
-            <Link 
-              to="/admin" 
-              className="text-white hover:text-green-200 transition-colors duration-200 font-medium flex items-center space-x-1"
-            >
-              <span>⚙️</span>
-              <span>Admin</span>
-            </Link>
-            <div className="flex items-center space-x-4">
+            {isAuthenticated && user?.role === 'admin' && (
               <Link 
-                to="/login" 
-                className="text-white hover:text-green-200 transition-colors duration-200 font-medium"
+                to="/admin" 
+                className="text-white hover:text-green-200 transition-colors duration-200 font-medium flex items-center space-x-1"
               >
-                Login
+                <span>⚙️</span>
+                <span>Admin</span>
               </Link>
-              <Link 
-                to="/register" 
-                className="bg-white text-green-600 px-4 py-2 rounded-lg font-medium hover:bg-green-50 transition-colors duration-200"
-              >
-                Register
-              </Link>
-            </div>
+            )}
+            
+            {/* Auth Section */}
+            {isAuthenticated ? (
+              <div className="relative">
+                <button
+                  onClick={toggleUserMenu}
+                  className="flex items-center space-x-2 text-white hover:text-green-200 transition-colors duration-200"
+                >
+                  <div className="w-8 h-8 bg-white rounded-full flex items-center justify-center">
+                    <span className="text-green-600 font-bold text-sm">
+                      {getUserInitial()}
+                    </span>
+                  </div>
+                  <span className="font-medium">{getUserDisplayName()}</span>
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                  </svg>
+                </button>
+
+                {/* User Dropdown Menu */}
+                {isUserMenuOpen && (
+                  <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-50">
+                    <div className="px-4 py-2 text-sm text-gray-700 border-b">
+                      <p className="font-medium">{user?.name || 'User'}</p>
+                      <p className="text-gray-500">{user?.email}</p>
+                      <p className="text-xs text-green-600 capitalize">{user?.role}</p>
+                    </div>
+                    <Link
+                      to="/dashboard"
+                      className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                      onClick={() => setIsUserMenuOpen(false)}
+                    >
+                      Dashboard
+                    </Link>
+                    <Link
+                      to="/profile"
+                      className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                      onClick={() => setIsUserMenuOpen(false)}
+                    >
+                      Profile
+                    </Link>
+                    <button
+                      onClick={handleLogout}
+                      className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                    >
+                      Sign out
+                    </button>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <div className="flex items-center space-x-4">
+                <Link 
+                  to="/login" 
+                  className="text-white hover:text-green-200 transition-colors duration-200 font-medium"
+                >
+                  Login
+                </Link>
+                <Link 
+                  to="/register" 
+                  className="bg-white text-green-600 px-4 py-2 rounded-lg font-medium hover:bg-green-50 transition-colors duration-200"
+                >
+                  Register
+                </Link>
+              </div>
+            )}
           </div>
 
           {/* Mobile menu button */}
@@ -110,28 +176,64 @@ const Navbar = () => {
               >
                 💬 Chat
               </Link>
-              <Link 
-                to="/admin" 
-                className="text-white hover:text-green-200 block px-3 py-2 rounded-md text-base font-medium"
-                onClick={() => setIsMenuOpen(false)}
-              >
-                ⚙️ Admin
-              </Link>
-              <div className="pt-4 pb-3 border-t border-green-600">
+              {isAuthenticated && user?.role === 'admin' && (
                 <Link 
-                  to="/login" 
+                  to="/admin" 
                   className="text-white hover:text-green-200 block px-3 py-2 rounded-md text-base font-medium"
                   onClick={() => setIsMenuOpen(false)}
                 >
-                  Login
+                  ⚙️ Admin
                 </Link>
-                <Link 
-                  to="/register" 
-                  className="bg-white text-green-600 block px-3 py-2 rounded-md text-base font-medium mt-2"
-                  onClick={() => setIsMenuOpen(false)}
-                >
-                  Register
-                </Link>
+              )}
+              <div className="pt-4 pb-3 border-t border-green-600">
+                {isAuthenticated ? (
+                  <>
+                    <div className="px-3 py-2 text-white">
+                      <p className="font-medium">{user?.name || 'User'}</p>
+                      <p className="text-sm text-green-200">{user?.email}</p>
+                    </div>
+                    <Link 
+                      to="/dashboard" 
+                      className="text-white hover:text-green-200 block px-3 py-2 rounded-md text-base font-medium"
+                      onClick={() => setIsMenuOpen(false)}
+                    >
+                      Dashboard
+                    </Link>
+                    <Link 
+                      to="/profile" 
+                      className="text-white hover:text-green-200 block px-3 py-2 rounded-md text-base font-medium"
+                      onClick={() => setIsMenuOpen(false)}
+                    >
+                      Profile
+                    </Link>
+                    <button 
+                      onClick={() => {
+                        handleLogout();
+                        setIsMenuOpen(false);
+                      }}
+                      className="text-white hover:text-green-200 block w-full text-left px-3 py-2 rounded-md text-base font-medium"
+                    >
+                      Sign out
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    <Link 
+                      to="/login" 
+                      className="text-white hover:text-green-200 block px-3 py-2 rounded-md text-base font-medium"
+                      onClick={() => setIsMenuOpen(false)}
+                    >
+                      Login
+                    </Link>
+                    <Link 
+                      to="/register" 
+                      className="bg-white text-green-600 block px-3 py-2 rounded-md text-base font-medium mt-2"
+                      onClick={() => setIsMenuOpen(false)}
+                    >
+                      Register
+                    </Link>
+                  </>
+                )}
               </div>
             </div>
           </div>
