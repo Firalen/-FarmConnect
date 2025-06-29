@@ -14,6 +14,7 @@ import AddProduct from './pages/AddProduct';
 import Chat from './pages/Chat';
 import Orders from './pages/Orders';
 import Articles from './pages/Articles';
+import Cart from './pages/Cart';
 import Admin from './pages/Admin';
 import './App.css';
 
@@ -36,6 +37,7 @@ function App() {
                 <Route path="/chat" element={<Chat />} />
                 <Route path="/orders" element={<Orders />} />
                 <Route path="/articles" element={<Articles />} />
+                <Route path="/cart" element={<Cart />} />
                 <Route path="/admin" element={<Admin />} />
               </Routes>
             </main>

@@ -1,11 +1,13 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { useCart } from '../context/CartContext';
 
 const Navbar = () => {
+  const { user, isAuthenticated, logout } = useAuth();
+  const { cartItemCount } = useCart();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
-  const { user, logout, isAuthenticated, getUserDisplayName, getUserInitial } = useAuth();
 
   const toggleMenu = () => {
     setIsMenuOpen(!isMenuOpen);
@@ -18,6 +20,14 @@ const Navbar = () => {
   const handleLogout = () => {
     logout();
     setIsUserMenuOpen(false);
+  };
+
+  const getUserInitial = () => {
+    return user?.name ? user.name.charAt(0).toUpperCase() : 'U';
+  };
+
+  const getUserDisplayName = () => {
+    return user?.name || 'User';
   };
 
   return (
@@ -73,6 +83,20 @@ const Navbar = () => {
               <span>🛒</span>
               <span>Orders</span>
             </Link>
+            {isAuthenticated && user?.role === 'buyer' && (
+              <Link
+                to="/cart"
+                className="text-white hover:text-green-200 transition-colors duration-200 font-medium flex items-center space-x-1 relative"
+              >
+                <span>🛒</span>
+                <span>Cart</span>
+                {cartItemCount > 0 && (
+                  <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
+                    {cartItemCount > 9 ? '9+' : cartItemCount}
+                  </span>
+                )}
+              </Link>
+            )}
             {isAuthenticated && user?.role === 'admin' && (
               <Link 
                 to="/admin" 
@@ -217,6 +241,21 @@ const Navbar = () => {
               >
                 🛒 Orders
               </Link>
+              {isAuthenticated && user?.role === 'buyer' && (
+                <Link
+                  to="/cart"
+                  className="text-white hover:text-green-200 block px-3 py-2 rounded-md text-base font-medium"
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  <span>🛒</span>
+                  <span>Cart</span>
+                  {cartItemCount > 0 && (
+                    <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
+                      {cartItemCount > 9 ? '9+' : cartItemCount}
+                    </span>
+                  )}
+                </Link>
+              )}
               {isAuthenticated && user?.role === 'admin' && (
                 <Link 
                   to="/admin" 
