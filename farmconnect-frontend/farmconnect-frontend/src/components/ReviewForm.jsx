@@ -1,13 +1,12 @@
 import React, { useState } from 'react';
-import { FaStar, FaUpload, FaTimes } from 'react-icons/fa';
+import { FaStar } from 'react-icons/fa';
 import { toast } from 'react-hot-toast';
 
 const ReviewForm = ({ productId, onSubmit, onCancel }) => {
   const [formData, setFormData] = useState({
     rating: 0,
     title: '',
-    comment: '',
-    images: []
+    comment: ''
   });
   const [hoveredRating, setHoveredRating] = useState(0);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -19,39 +18,6 @@ const ReviewForm = ({ productId, onSubmit, onCancel }) => {
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
-  };
-
-  const handleImageUpload = (e) => {
-    const files = Array.from(e.target.files);
-    const imageFiles = files.filter(file => file.type.startsWith('image/'));
-    
-    if (imageFiles.length + formData.images.length > 5) {
-      toast.error('Maximum 5 images allowed');
-      return;
-    }
-
-    imageFiles.forEach(file => {
-      if (file.size > 5 * 1024 * 1024) { // 5MB limit
-        toast.error(`${file.name} is too large. Maximum size is 5MB`);
-        return;
-      }
-
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        setFormData(prev => ({
-          ...prev,
-          images: [...prev.images, e.target.result]
-        }));
-      };
-      reader.readAsDataURL(file);
-    });
-  };
-
-  const removeImage = (index) => {
-    setFormData(prev => ({
-      ...prev,
-      images: prev.images.filter((_, i) => i !== index)
-    }));
   };
 
   const handleSubmit = async (e) => {
@@ -78,17 +44,10 @@ const ReviewForm = ({ productId, onSubmit, onCancel }) => {
         productId,
         rating: formData.rating,
         title: formData.title.trim(),
-        comment: formData.comment.trim(),
-        images: formData.images
+        comment: formData.comment.trim()
       });
       
-      // Reset form
-      setFormData({
-        rating: 0,
-        title: '',
-        comment: '',
-        images: []
-      });
+      setFormData({ rating: 0, title: '', comment: '' });
       setHoveredRating(0);
     } catch (error) {
       console.error('Error submitting review:', error);
@@ -147,9 +106,6 @@ const ReviewForm = ({ productId, onSubmit, onCancel }) => {
             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
             placeholder="Summarize your experience"
           />
-          <p className="text-xs text-gray-500 mt-1">
-            {formData.title.length}/100 characters
-          </p>
         </div>
 
         {/* Comment */}
@@ -167,62 +123,6 @@ const ReviewForm = ({ productId, onSubmit, onCancel }) => {
             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
             placeholder="Share your detailed experience with this product..."
           />
-          <p className="text-xs text-gray-500 mt-1">
-            {formData.comment.length}/500 characters
-          </p>
-        </div>
-
-        {/* Image Upload */}
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Add Photos (Optional)
-          </label>
-          <div className="space-y-3">
-            {/* Image Upload Button */}
-            {formData.images.length < 5 && (
-              <div className="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center">
-                <input
-                  type="file"
-                  accept="image/*"
-                  multiple
-                  onChange={handleImageUpload}
-                  className="hidden"
-                  id="image-upload"
-                />
-                <label
-                  htmlFor="image-upload"
-                  className="cursor-pointer flex flex-col items-center"
-                >
-                  <FaUpload className="text-2xl text-gray-400 mb-2" />
-                  <span className="text-sm text-gray-600">
-                    Click to upload images (max 5, 5MB each)
-                  </span>
-                </label>
-              </div>
-            )}
-
-            {/* Preview Images */}
-            {formData.images.length > 0 && (
-              <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-                {formData.images.map((image, index) => (
-                  <div key={index} className="relative">
-                    <img
-                      src={image}
-                      alt={`Review ${index + 1}`}
-                      className="w-full h-24 object-cover rounded-lg"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => removeImage(index)}
-                      className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 hover:bg-red-600"
-                    >
-                      <FaTimes className="text-xs" />
-                    </button>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
         </div>
 
         {/* Submit Buttons */}

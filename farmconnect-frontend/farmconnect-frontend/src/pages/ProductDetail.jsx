@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { productsAPI } from '../services/api';
 import { useAuth } from '../context/AuthContext';
+import ReviewList from '../components/ReviewList';
 
 const ProductDetail = () => {
   const { id } = useParams();
@@ -202,6 +203,18 @@ const ProductDetail = () => {
               </div>
             </div>
           </div>
+        </div>
+
+        {/* Reviews Section */}
+        <div className="mt-8 bg-white rounded-xl shadow-lg p-8">
+          <h2 className="text-2xl font-bold text-gray-800 mb-6">Customer Reviews</h2>
+          <ReviewList 
+            productId={product._id} 
+            onReviewAdded={() => {
+              // Refresh product data to update rating
+              window.location.reload();
+            }}
+          />
         </div>
 
         {/* Related Products Section */}

@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useCart } from '../context/CartContext';
+import { FaStar } from 'react-icons/fa';
 
 const ProductCard = ({ product }) => {
   const { user, isAuthenticated } = useAuth();
@@ -81,6 +82,30 @@ const ProductCard = ({ product }) => {
           <span className="text-2xl font-bold text-green-600">
             ETB {product.price}
           </span>
+        </div>
+
+        {/* Rating Display */}
+        <div className="flex items-center space-x-2 mb-2">
+          <div className="flex items-center">
+            {[1, 2, 3, 4, 5].map((star) => (
+              <FaStar
+                key={star}
+                className={`${
+                  star <= (product.averageRating || 0)
+                    ? 'text-yellow-400'
+                    : 'text-gray-300'
+                } text-sm`}
+              />
+            ))}
+          </div>
+          <span className="text-sm text-gray-600">
+            {product.averageRating ? product.averageRating.toFixed(1) : '0.0'}
+          </span>
+          {product.totalReviews > 0 && (
+            <span className="text-sm text-gray-500">
+              ({product.totalReviews})
+            </span>
+          )}
         </div>
 
         <p className="text-gray-600 text-sm mb-4 line-clamp-2">
