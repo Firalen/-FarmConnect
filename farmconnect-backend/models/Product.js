@@ -14,6 +14,9 @@ const productSchema = new mongoose.Schema({
   farmerId: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
   farmerName: { type: String },
   postedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
+  // Rating fields
+  averageRating: { type: Number, default: 0, min: 0, max: 5 },
+  totalReviews: { type: Number, default: 0, min: 0 }
 }, { timestamps: { createdAt: true, updatedAt: false } });
 
 module.exports = mongoose.model('Product', productSchema); 
