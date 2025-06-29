@@ -23,7 +23,11 @@ exports.register = async (req, res) => {
       phoneNumber,
       profileImage,
     });
-    const token = jwt.sign({ id: user._id, role: user.role }, process.env.JWT_SECRET, { expiresIn: '7d' });
+    const token = jwt.sign(
+      { id: user._id, role: user.role }, 
+      process.env.JWT_SECRET || 'your-super-secret-jwt-key-change-this-in-production', 
+      { expiresIn: '7d' }
+    );
     res.status(201).json({
       _id: user._id,
       name: user.name,
@@ -54,7 +58,11 @@ exports.login = async (req, res) => {
     if (!isMatch) {
       return res.status(400).json({ message: 'Invalid credentials' });
     }
-    const token = jwt.sign({ id: user._id, role: user.role }, process.env.JWT_SECRET, { expiresIn: '7d' });
+    const token = jwt.sign(
+      { id: user._id, role: user.role }, 
+      process.env.JWT_SECRET || 'your-super-secret-jwt-key-change-this-in-production', 
+      { expiresIn: '7d' }
+    );
     res.json({
       _id: user._id,
       name: user.name,
