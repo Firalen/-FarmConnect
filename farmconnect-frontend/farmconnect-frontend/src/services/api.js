@@ -120,6 +120,9 @@ export const usersAPI = {
   getById: (id) => api.get(`/users/${id}`),
   updateProfile: (userData) => api.put('/users/profile', userData),
   getProfile: () => api.get('/users/profile'),
+  // Admin user management
+  update: (id, userData) => api.put(`/users/${id}`, userData),
+  delete: (id) => api.delete(`/users/${id}`),
 };
 
 export default api; 
