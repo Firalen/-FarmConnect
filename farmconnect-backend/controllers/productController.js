@@ -76,12 +76,11 @@ exports.updateProduct = async (req, res) => {
   try {
     const product = await Product.findById(req.params.id);
     if (!product) return res.status(404).json({ message: 'Product not found' });
-    if (product.postedBy.toString() !== req.user._id.toString()) {
+    // Allow if admin or owner
+    if (product.postedBy.toString() !== req.user._id.toString() && req.user.role !== 'admin') {
       return res.status(403).json({ message: 'Not authorized' });
     }
-    
     const updates = req.body;
-    
     // Handle file upload for updates
     if (req.file) {
       // Delete old image if it exists
@@ -92,12 +91,10 @@ exports.updateProduct = async (req, res) => {
           fs.unlinkSync(fullOldPath);
         }
       }
-      
       // Create new image URL
       const baseUrl = `${req.protocol}://${req.get('host')}`;
       updates.imageUrl = `${baseUrl}/uploads/${req.file.filename}`;
     }
-    
     Object.assign(product, updates);
     await product.save();
     res.json(product);
@@ -111,10 +108,10 @@ exports.deleteProduct = async (req, res) => {
   try {
     const product = await Product.findById(req.params.id);
     if (!product) return res.status(404).json({ message: 'Product not found' });
-    if (product.postedBy.toString() !== req.user._id.toString()) {
+    // Allow if admin or owner
+    if (product.postedBy.toString() !== req.user._id.toString() && req.user.role !== 'admin') {
       return res.status(403).json({ message: 'Not authorized' });
     }
-    
     // Delete associated image file
     if (product.imageUrl) {
       const imagePath = product.imageUrl.replace(`${req.protocol}://${req.get('host')}/uploads/`, '');
@@ -123,7 +120,6 @@ exports.deleteProduct = async (req, res) => {
         fs.unlinkSync(fullImagePath);
       }
     }
-    
     await product.deleteOne();
     res.json({ message: 'Product deleted' });
   } catch (err) {
