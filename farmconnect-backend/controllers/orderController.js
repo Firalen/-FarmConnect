@@ -148,21 +148,22 @@ exports.getOrderById = async (req, res) => {
   }
 };
 
-// Update order status (farmer only)
+// Update order status (farmer or admin)
 exports.updateOrderStatus = async (req, res) => {
   try {
     const { status } = req.body;
     const orderId = req.params.id;
     const userId = req.user._id;
+    const userRole = req.user.role;
 
     const order = await Order.findById(orderId);
     if (!order) {
       return res.status(404).json({ message: 'Order not found' });
     }
 
-    // Only farmer can update order status
-    if (order.farmer.toString() !== userId.toString()) {
-      return res.status(403).json({ message: 'Only the farmer can update order status' });
+    // Only farmer or admin can update order status
+    if (order.farmer.toString() !== userId.toString() && userRole !== 'admin') {
+      return res.status(403).json({ message: 'Only the farmer or admin can update order status' });
     }
 
     // Validate status transition

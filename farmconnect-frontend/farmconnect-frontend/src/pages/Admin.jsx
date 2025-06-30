@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { usersAPI, productsAPI } from '../services/api';
+import { usersAPI, productsAPI, ordersAPI } from '../services/api';
 
 const Admin = () => {
   const [users, setUsers] = useState([]);
@@ -13,11 +13,17 @@ const Admin = () => {
   const [productError, setProductError] = useState(null);
   const [editProductId, setEditProductId] = useState(null);
   const [editProductForm, setEditProductForm] = useState({ title: '', price: '', category: '', quantity: '', unit: '', location: '', isAvailable: true });
+  const [orders, setOrders] = useState([]);
+  const [orderLoading, setOrderLoading] = useState(true);
+  const [orderError, setOrderError] = useState(null);
+  const [editOrderId, setEditOrderId] = useState(null);
+  const [editOrderStatus, setEditOrderStatus] = useState('');
 
   // Fetch all users
   useEffect(() => {
     fetchUsers();
     fetchProducts();
+    fetchOrders();
   }, []);
 
   const fetchUsers = async () => {
@@ -43,6 +49,19 @@ const Admin = () => {
       setProductError(err.response?.data?.message || 'Failed to fetch products');
     } finally {
       setProductLoading(false);
+    }
+  };
+
+  const fetchOrders = async () => {
+    setOrderLoading(true);
+    setOrderError(null);
+    try {
+      const res = await ordersAPI.getAll();
+      setOrders(res.data);
+    } catch (err) {
+      setOrderError(err.response?.data?.message || 'Failed to fetch orders');
+    } finally {
+      setOrderLoading(false);
     }
   };
 
@@ -134,6 +153,36 @@ const Admin = () => {
       setActionLoading(false);
     }
   };
+
+  const handleOrderEdit = (order) => {
+    setEditOrderId(order._id);
+    setEditOrderStatus(order.status);
+  };
+
+  const handleOrderStatusChange = (e) => {
+    setEditOrderStatus(e.target.value);
+  };
+
+  const handleOrderEditSave = async (id) => {
+    setActionLoading(true);
+    try {
+      await ordersAPI.updateStatus(id, editOrderStatus);
+      setEditOrderId(null);
+      fetchOrders();
+    } catch (err) {
+      setOrderError(err.response?.data?.message || 'Failed to update order status');
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const orderStatusOptions = [
+    'pending',
+    'confirmed',
+    'shipped',
+    'delivered',
+    'cancelled',
+  ];
 
   return (
     <div className="max-w-6xl mx-auto mt-10 p-6 bg-white rounded shadow">
@@ -420,6 +469,81 @@ const Admin = () => {
                           Delete
                         </button>
                       </>
+                    )}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+      <hr className="my-8" />
+      <h3 className="text-xl font-semibold mb-4">Order Management</h3>
+      {orderLoading ? (
+        <p>Loading orders...</p>
+      ) : orderError ? (
+        <p className="text-red-600">{orderError}</p>
+      ) : (
+        <div className="overflow-x-auto">
+          <table className="min-w-full border">
+            <thead>
+              <tr className="bg-gray-100">
+                <th className="py-2 px-4 border">Order ID</th>
+                <th className="py-2 px-4 border">Buyer</th>
+                <th className="py-2 px-4 border">Farmer</th>
+                <th className="py-2 px-4 border">Total</th>
+                <th className="py-2 px-4 border">Status</th>
+                <th className="py-2 px-4 border">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {orders.map((order) => (
+                <tr key={order._id} className="border-b">
+                  <td className="py-2 px-4 border">{order._id}</td>
+                  <td className="py-2 px-4 border">{order.buyer?.name || '-'}</td>
+                  <td className="py-2 px-4 border">{order.farmer?.name || '-'}</td>
+                  <td className="py-2 px-4 border">{order.totalAmount}</td>
+                  <td className="py-2 px-4 border">
+                    {editOrderId === order._id ? (
+                      <select
+                        value={editOrderStatus}
+                        onChange={handleOrderStatusChange}
+                        className="border rounded px-2 py-1 w-full"
+                      >
+                        {orderStatusOptions.map((status) => (
+                          <option key={status} value={status}>{status.charAt(0).toUpperCase() + status.slice(1)}</option>
+                        ))}
+                      </select>
+                    ) : (
+                      order.status
+                    )}
+                  </td>
+                  <td className="py-2 px-4 border space-x-2">
+                    {editOrderId === order._id ? (
+                      <>
+                        <button
+                          className="bg-green-600 text-white px-3 py-1 rounded hover:bg-green-700"
+                          onClick={() => handleOrderEditSave(order._id)}
+                          disabled={actionLoading}
+                        >
+                          Save
+                        </button>
+                        <button
+                          className="bg-gray-400 text-white px-3 py-1 rounded hover:bg-gray-500"
+                          onClick={() => setEditOrderId(null)}
+                          disabled={actionLoading}
+                        >
+                          Cancel
+                        </button>
+                      </>
+                    ) : (
+                      <button
+                        className="bg-blue-600 text-white px-3 py-1 rounded hover:bg-blue-700"
+                        onClick={() => handleOrderEdit(order)}
+                        disabled={actionLoading}
+                      >
+                        Edit
+                      </button>
                     )}
                   </td>
                 </tr>
