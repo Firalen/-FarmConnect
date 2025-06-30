@@ -19,4 +19,9 @@ exports.errorHandler = (err, req, res, next) => {
     message,
     stack: process.env.NODE_ENV === 'production' ? undefined : err.stack,
   });
+};
+
+// Add asyncHandler utility for handling async errors in controllers
+exports.asyncHandler = fn => (req, res, next) => {
+  Promise.resolve(fn(req, res, next)).catch(next);
 }; 
