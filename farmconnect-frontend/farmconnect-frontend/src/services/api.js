@@ -125,4 +125,10 @@ export const usersAPI = {
   delete: (id) => api.delete(`/users/${id}`),
 };
 
+// Reviews API
+export const reviewsAPI = {
+  getAll: (params = {}) => api.get('/reviews', { params }),
+  delete: (id) => api.delete(`/reviews/${id}`),
+};
+
 export default api; 

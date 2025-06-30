@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { usersAPI, productsAPI, ordersAPI } from '../services/api';
+import { usersAPI, productsAPI, ordersAPI, reviewsAPI } from '../services/api';
 
 const Admin = () => {
   const [users, setUsers] = useState([]);
@@ -18,12 +18,16 @@ const Admin = () => {
   const [orderError, setOrderError] = useState(null);
   const [editOrderId, setEditOrderId] = useState(null);
   const [editOrderStatus, setEditOrderStatus] = useState('');
+  const [reviews, setReviews] = useState([]);
+  const [reviewLoading, setReviewLoading] = useState(true);
+  const [reviewError, setReviewError] = useState(null);
 
   // Fetch all users
   useEffect(() => {
     fetchUsers();
     fetchProducts();
     fetchOrders();
+    fetchReviews();
   }, []);
 
   const fetchUsers = async () => {
@@ -62,6 +66,19 @@ const Admin = () => {
       setOrderError(err.response?.data?.message || 'Failed to fetch orders');
     } finally {
       setOrderLoading(false);
+    }
+  };
+
+  const fetchReviews = async () => {
+    setReviewLoading(true);
+    setReviewError(null);
+    try {
+      const res = await reviewsAPI.getAll();
+      setReviews(res.data.data || []);
+    } catch (err) {
+      setReviewError(err.response?.data?.message || 'Failed to fetch reviews');
+    } finally {
+      setReviewLoading(false);
     }
   };
 
@@ -183,6 +200,19 @@ const Admin = () => {
     'delivered',
     'cancelled',
   ];
+
+  const handleReviewDelete = async (id) => {
+    if (!window.confirm('Are you sure you want to delete this review?')) return;
+    setActionLoading(true);
+    try {
+      await reviewsAPI.delete(id);
+      fetchReviews();
+    } catch (err) {
+      setReviewError(err.response?.data?.message || 'Failed to delete review');
+    } finally {
+      setActionLoading(false);
+    }
+  };
 
   return (
     <div className="max-w-6xl mx-auto mt-10 p-6 bg-white rounded shadow">
@@ -545,6 +575,48 @@ const Admin = () => {
                         Edit
                       </button>
                     )}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+      <hr className="my-8" />
+      <h3 className="text-xl font-semibold mb-4">Review Management</h3>
+      {reviewLoading ? (
+        <p>Loading reviews...</p>
+      ) : reviewError ? (
+        <p className="text-red-600">{reviewError}</p>
+      ) : (
+        <div className="overflow-x-auto">
+          <table className="min-w-full border">
+            <thead>
+              <tr className="bg-gray-100">
+                <th className="py-2 px-4 border">Product</th>
+                <th className="py-2 px-4 border">User</th>
+                <th className="py-2 px-4 border">Rating</th>
+                <th className="py-2 px-4 border">Title</th>
+                <th className="py-2 px-4 border">Comment</th>
+                <th className="py-2 px-4 border">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {reviews.map((review) => (
+                <tr key={review._id} className="border-b">
+                  <td className="py-2 px-4 border">{review.product?.title || '-'}</td>
+                  <td className="py-2 px-4 border">{review.user?.name || '-'}</td>
+                  <td className="py-2 px-4 border">{review.rating}</td>
+                  <td className="py-2 px-4 border">{review.title}</td>
+                  <td className="py-2 px-4 border">{review.comment}</td>
+                  <td className="py-2 px-4 border">
+                    <button
+                      className="bg-red-600 text-white px-3 py-1 rounded hover:bg-red-700"
+                      onClick={() => handleReviewDelete(review._id)}
+                      disabled={actionLoading}
+                    >
+                      Delete
+                    </button>
                   </td>
                 </tr>
               ))}

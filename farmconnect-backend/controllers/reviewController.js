@@ -304,6 +304,34 @@ const getReviewStats = asyncHandler(async (req, res) => {
   });
 });
 
+// @desc    Get all reviews (admin only)
+// @route   GET /api/reviews
+// @access  Admin
+const getAllReviews = asyncHandler(async (req, res) => {
+  if (req.user.role !== 'admin') {
+    res.status(403);
+    throw new Error('Not authorized as admin');
+  }
+  const { page = 1, limit = 20 } = req.query;
+  const reviews = await Review.find()
+    .populate('user', 'name avatar')
+    .populate('product', 'title')
+    .sort({ createdAt: -1 })
+    .limit(limit * 1)
+    .skip((page - 1) * limit)
+    .exec();
+  const total = await Review.countDocuments();
+  res.json({
+    success: true,
+    data: reviews,
+    pagination: {
+      currentPage: page,
+      totalPages: Math.ceil(total / limit),
+      totalReviews: total
+    }
+  });
+});
+
 // Helper function to update product average rating
 const updateProductRating = async (productId) => {
   const stats = await Review.aggregate([
@@ -338,5 +366,6 @@ module.exports = {
   deleteReview,
   markHelpful,
   reportReview,
-  getReviewStats
+  getReviewStats,
+  getAllReviews
 }; 
