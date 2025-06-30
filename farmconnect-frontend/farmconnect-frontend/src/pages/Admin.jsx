@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { usersAPI, productsAPI, ordersAPI, reviewsAPI } from '../services/api';
+import { usersAPI, productsAPI, ordersAPI, reviewsAPI, articlesAPI } from '../services/api';
 
 const Admin = () => {
   const [users, setUsers] = useState([]);
@@ -21,6 +21,11 @@ const Admin = () => {
   const [reviews, setReviews] = useState([]);
   const [reviewLoading, setReviewLoading] = useState(true);
   const [reviewError, setReviewError] = useState(null);
+  const [articles, setArticles] = useState([]);
+  const [articleLoading, setArticleLoading] = useState(true);
+  const [articleError, setArticleError] = useState(null);
+  const [editArticleId, setEditArticleId] = useState(null);
+  const [editArticleForm, setEditArticleForm] = useState({ title: '', content: '', category: '', imageUrl: '' });
 
   // Fetch all users
   useEffect(() => {
@@ -28,6 +33,7 @@ const Admin = () => {
     fetchProducts();
     fetchOrders();
     fetchReviews();
+    fetchArticles();
   }, []);
 
   const fetchUsers = async () => {
@@ -79,6 +85,19 @@ const Admin = () => {
       setReviewError(err.response?.data?.message || 'Failed to fetch reviews');
     } finally {
       setReviewLoading(false);
+    }
+  };
+
+  const fetchArticles = async () => {
+    setArticleLoading(true);
+    setArticleError(null);
+    try {
+      const res = await articlesAPI.getAll();
+      setArticles(res.data);
+    } catch (err) {
+      setArticleError(err.response?.data?.message || 'Failed to fetch articles');
+    } finally {
+      setArticleLoading(false);
     }
   };
 
@@ -209,6 +228,46 @@ const Admin = () => {
       fetchReviews();
     } catch (err) {
       setReviewError(err.response?.data?.message || 'Failed to delete review');
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const handleArticleEdit = (article) => {
+    setEditArticleId(article._id);
+    setEditArticleForm({
+      title: article.title || '',
+      content: article.content || '',
+      category: article.category || '',
+      imageUrl: article.imageUrl || '',
+    });
+  };
+
+  const handleArticleEditChange = (e) => {
+    setEditArticleForm({ ...editArticleForm, [e.target.name]: e.target.value });
+  };
+
+  const handleArticleEditSave = async (id) => {
+    setActionLoading(true);
+    try {
+      await articlesAPI.update(id, editArticleForm);
+      setEditArticleId(null);
+      fetchArticles();
+    } catch (err) {
+      setArticleError(err.response?.data?.message || 'Failed to update article');
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const handleArticleDelete = async (id) => {
+    if (!window.confirm('Are you sure you want to delete this article?')) return;
+    setActionLoading(true);
+    try {
+      await articlesAPI.delete(id);
+      fetchArticles();
+    } catch (err) {
+      setArticleError(err.response?.data?.message || 'Failed to delete article');
     } finally {
       setActionLoading(false);
     }
@@ -617,6 +676,108 @@ const Admin = () => {
                     >
                       Delete
                     </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+      <hr className="my-8" />
+      <h3 className="text-xl font-semibold mb-4">Article Management</h3>
+      {articleLoading ? (
+        <p>Loading articles...</p>
+      ) : articleError ? (
+        <p className="text-red-600">{articleError}</p>
+      ) : (
+        <div className="overflow-x-auto">
+          <table className="min-w-full border">
+            <thead>
+              <tr className="bg-gray-100">
+                <th className="py-2 px-4 border">Title</th>
+                <th className="py-2 px-4 border">Category</th>
+                <th className="py-2 px-4 border">Content</th>
+                <th className="py-2 px-4 border">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {articles.map((article) => (
+                <tr key={article._id} className="border-b">
+                  <td className="py-2 px-4 border">
+                    {editArticleId === article._id ? (
+                      <input
+                        type="text"
+                        name="title"
+                        value={editArticleForm.title}
+                        onChange={handleArticleEditChange}
+                        className="border rounded px-2 py-1 w-full"
+                      />
+                    ) : (
+                      article.title
+                    )}
+                  </td>
+                  <td className="py-2 px-4 border">
+                    {editArticleId === article._id ? (
+                      <input
+                        type="text"
+                        name="category"
+                        value={editArticleForm.category}
+                        onChange={handleArticleEditChange}
+                        className="border rounded px-2 py-1 w-full"
+                      />
+                    ) : (
+                      article.category
+                    )}
+                  </td>
+                  <td className="py-2 px-4 border">
+                    {editArticleId === article._id ? (
+                      <textarea
+                        name="content"
+                        value={editArticleForm.content}
+                        onChange={handleArticleEditChange}
+                        className="border rounded px-2 py-1 w-full"
+                        rows={2}
+                      />
+                    ) : (
+                      <span className="block truncate max-w-xs">{article.content}</span>
+                    )}
+                  </td>
+                  <td className="py-2 px-4 border space-x-2">
+                    {editArticleId === article._id ? (
+                      <>
+                        <button
+                          className="bg-green-600 text-white px-3 py-1 rounded hover:bg-green-700"
+                          onClick={() => handleArticleEditSave(article._id)}
+                          disabled={actionLoading}
+                        >
+                          Save
+                        </button>
+                        <button
+                          className="bg-gray-400 text-white px-3 py-1 rounded hover:bg-gray-500"
+                          onClick={() => setEditArticleId(null)}
+                          disabled={actionLoading}
+                        >
+                          Cancel
+                        </button>
+                      </>
+                    ) : (
+                      <>
+                        <button
+                          className="bg-blue-600 text-white px-3 py-1 rounded hover:bg-blue-700"
+                          onClick={() => handleArticleEdit(article)}
+                          disabled={actionLoading}
+                        >
+                          Edit
+                        </button>
+                        <button
+                          className="bg-red-600 text-white px-3 py-1 rounded hover:bg-red-700"
+                          onClick={() => handleArticleDelete(article._id)}
+                          disabled={actionLoading}
+                        >
+                          Delete
+                        </button>
+                      </>
+                    )}
                   </td>
                 </tr>
               ))}

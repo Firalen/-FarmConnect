@@ -43,7 +43,8 @@ exports.updateArticle = async (req, res) => {
   try {
     const article = await Article.findById(req.params.id);
     if (!article) return res.status(404).json({ message: 'Article not found' });
-    if (article.postedBy.toString() !== req.user._id.toString()) {
+    // Allow if admin or owner
+    if (article.postedBy.toString() !== req.user._id.toString() && req.user.role !== 'admin') {
       return res.status(403).json({ message: 'Not authorized' });
     }
     const updates = req.body;
@@ -60,7 +61,8 @@ exports.deleteArticle = async (req, res) => {
   try {
     const article = await Article.findById(req.params.id);
     if (!article) return res.status(404).json({ message: 'Article not found' });
-    if (article.postedBy.toString() !== req.user._id.toString()) {
+    // Allow if admin or owner
+    if (article.postedBy.toString() !== req.user._id.toString() && req.user.role !== 'admin') {
       return res.status(403).json({ message: 'Not authorized' });
     }
     await article.deleteOne();
