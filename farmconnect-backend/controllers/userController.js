@@ -89,4 +89,48 @@ exports.getProfile = async (req, res) => {
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
+};
+
+// Get all users (admin only)
+exports.getAllUsers = async (req, res) => {
+  try {
+    const users = await User.find().select('-password');
+    res.json(users);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
+// Update user (admin only)
+exports.updateUser = async (req, res) => {
+  try {
+    const { name, email, role, location, phoneNumber, profileImage } = req.body;
+    const user = await User.findById(req.params.id);
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+    user.name = name || user.name;
+    user.email = email || user.email;
+    user.role = role || user.role;
+    user.location = location || user.location;
+    user.phoneNumber = phoneNumber || user.phoneNumber;
+    user.profileImage = profileImage || user.profileImage;
+    await user.save();
+    res.json({ message: 'User updated', user });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
+// Delete user (admin only)
+exports.deleteUser = async (req, res) => {
+  try {
+    const user = await User.findByIdAndDelete(req.params.id);
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+    res.json({ message: 'User deleted' });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
 }; 
