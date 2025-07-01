@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { FaStar, FaThumbsUp, FaFlag, FaUser, FaCalendar } from 'react-icons/fa';
 import { toast } from 'react-hot-toast';
 import { useAuth } from '../context/AuthContext';
-import { api } from '../services/api';
+import api from '../services/api';
 
 const ReviewList = ({ productId, onReviewAdded }) => {
   const { user } = useAuth();

@@ -30,7 +30,7 @@ const resources = {
     translation: {
       welcome: 'Baga nagaan dhuftan FarmConnect!',
       login: 'Seeni',
-      register: 'Galmaa'i',
+      register: 'Galmaai',
       dashboard: 'Daashboordii',
       products: 'Oomishaalee',
       articles: 'Barreeffamoota',
