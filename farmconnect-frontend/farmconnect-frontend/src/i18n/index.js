@@ -14,6 +14,30 @@ const resources = {
       admin: 'Admin',
     },
   },
+  am: {
+    translation: {
+      welcome: 'እንኳን ወደ FarmConnect በደህና መጡ!',
+      login: 'ግባ',
+      register: 'ይመዝገቡ',
+      dashboard: 'ዳሽቦርድ',
+      products: 'ምርቶች',
+      articles: 'መጣጥፎች',
+      chat: 'ውይይት',
+      admin: 'አስተዳዳሪ',
+    },
+  },
+  om: {
+    translation: {
+      welcome: 'Baga nagaan dhuftan FarmConnect!',
+      login: 'Seeni',
+      register: 'Galmaa'i',
+      dashboard: 'Daashboordii',
+      products: 'Oomishaalee',
+      articles: 'Barreeffamoota',
+      chat: 'Waliigalte',
+      admin: 'Bulchaa',
+    },
+  },
   // Add other languages here
 };
 

@@ -2,12 +2,14 @@ import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useCart } from '../context/CartContext';
+import { useTranslation } from 'react-i18next';
 
 const Navbar = () => {
   const { user, isAuthenticated, logout } = useAuth();
   const { cartItemCount } = useCart();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
+  const { t, i18n } = useTranslation();
 
   const toggleMenu = () => {
     setIsMenuOpen(!isMenuOpen);
@@ -28,6 +30,10 @@ const Navbar = () => {
 
   const getUserDisplayName = () => {
     return user?.name || 'User';
+  };
+
+  const handleLanguageChange = (e) => {
+    i18n.changeLanguage(e.target.value);
   };
 
   return (
@@ -106,6 +112,17 @@ const Navbar = () => {
                 <span>Admin</span>
               </Link>
             )}
+            {/* Language Switcher */}
+            <select
+              value={i18n.language}
+              onChange={handleLanguageChange}
+              className="bg-green-700 text-white border border-white rounded px-2 py-1 focus:outline-none focus:ring-2 focus:ring-green-300"
+              style={{ minWidth: 90 }}
+            >
+              <option value="en">English</option>
+              <option value="am">አማርኛ</option>
+              <option value="om">Afaan Oromoo</option>
+            </select>
             
             {/* Auth Section */}
             {isAuthenticated ? (
