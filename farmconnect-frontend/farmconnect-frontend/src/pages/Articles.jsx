@@ -81,18 +81,7 @@ const Articles = () => {
           publishedAt: '2024-01-10T09:15:00Z',
           views: 1560
         },
-        {
-          _id: '4',
-          title: 'Organic Pest Control Methods',
-          content: 'Chemical pesticides can harm both crops and consumers. Learn about natural pest control alternatives...',
-          excerpt: 'Discover organic methods to protect your crops from pests without using harmful chemicals.',
-          author: { name: 'Dr. Fatima Hassan', role: 'Plant Pathologist' },
-          category: 'Farming Tips',
-          imageUrl: 'https://images.unsplash.com/photo-1525609004556-c46c7d6cf023?w=600&h=400&fit=crop',
-          readTime: '6 min read',
-          publishedAt: '2024-01-08T16:45:00Z',
-          views: 1120
-        },
+       
         {
           _id: '5',
           title: 'Nutritional Benefits of Ethiopian Superfoods',
