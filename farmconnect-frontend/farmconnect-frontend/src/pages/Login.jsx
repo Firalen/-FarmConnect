@@ -84,7 +84,7 @@ const Login = () => {
             </div>
           </div>
           <h2 className="text-3xl font-bold text-gray-900 mb-2">Welcome back</h2>
-          <p className="text-gray-600">Sign in to your FarmConnect account</p>
+          <p className="text-gray-600">login in to your FarmConnect account</p>
         </div>
 
         {/* Login Form */}
@@ -100,7 +100,7 @@ const Login = () => {
             {/* Email Field */}
             <div>
               <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
-                Email address
+                Email 
               </label>
               <input
                 id="email"
