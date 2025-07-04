@@ -11,6 +11,9 @@ const articleRoutes = require('./routes/articleRoutes');
 const orderRoutes = require('./routes/orderRoutes');
 const reviewRoutes = require('./routes/reviewRoutes');
 const { errorHandler } = require('./middleware/errorMiddleware');
+const passport = require('passport');
+const session = require('express-session');
+require('./config/passport');
 
 const app = express();
 
@@ -36,6 +39,15 @@ app.use('/api/messages', messageRoutes);
 app.use('/api/articles', articleRoutes);
 app.use('/api/orders', orderRoutes);
 app.use('/api/reviews', reviewRoutes);
+
+// Passport middleware
+app.use(session({
+  secret: process.env.SESSION_SECRET || 'your-session-secret',
+  resave: false,
+  saveUninitialized: false
+}));
+app.use(passport.initialize());
+app.use(passport.session());
 
 // Error handler
 app.use(errorHandler);

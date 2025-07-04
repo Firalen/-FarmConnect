@@ -8,6 +8,8 @@ const userSchema = new mongoose.Schema({
   location: { type: String },
   phoneNumber: { type: String },
   profileImage: { type: String },
+  googleId: { type: String },
+  facebookId: { type: String },
 }, { timestamps: true });
 
 module.exports = mongoose.model('User', userSchema); 
