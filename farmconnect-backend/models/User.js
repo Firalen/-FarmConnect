@@ -10,6 +10,8 @@ const userSchema = new mongoose.Schema({
   profileImage: { type: String },
   googleId: { type: String },
   facebookId: { type: String },
+  resetPasswordToken: { type: String },
+  resetPasswordExpires: { type: Date },
 }, { timestamps: true });
 
 module.exports = mongoose.model('User', userSchema); 

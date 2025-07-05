@@ -16,6 +16,7 @@ import Orders from './pages/Orders';
 import Articles from './pages/Articles';
 import Cart from './pages/Cart';
 import Admin from './pages/Admin';
+import ForgotPassword from './pages/ForgotPassword';
 
 
 function App() {
@@ -39,6 +40,7 @@ function App() {
                 <Route path="/articles" element={<Articles />} />
                 <Route path="/cart" element={<Cart />} />
                 <Route path="/admin" element={<Admin />} />
+                <Route path="/forgot-password" element={<ForgotPassword />} />
               </Routes>
             </main>
             <Footer />

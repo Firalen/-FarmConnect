@@ -40,5 +40,9 @@ router.get('/auth/facebook/callback', passport.authenticate('facebook', { failur
   );
   res.redirect(`/social-login-success?token=${token}`);
 });
+// Forgot password
+router.post('/forgot-password', userController.forgotPassword);
+// Reset password
+router.post('/reset-password/:token', userController.resetPassword);
 
 module.exports = router; 
