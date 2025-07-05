@@ -16,12 +16,16 @@ const session = require('express-session');
 require('./config/passport');
 const http = require('http');
 const socketIo = require('socket.io');
+const paymentRoutes = require('./routes/paymentRoutes');
 
 const app = express();
 
 // Middleware
 app.use(cors());
 app.use(express.json());
+
+// Raw body parsing for Stripe webhooks
+app.use('/api/payments/webhook', express.raw({ type: 'application/json' }));
 
 // Serve static files from uploads directory
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
@@ -41,6 +45,7 @@ app.use('/api/messages', messageRoutes);
 app.use('/api/articles', articleRoutes);
 app.use('/api/orders', orderRoutes);
 app.use('/api/reviews', reviewRoutes);
+app.use('/api/payments', paymentRoutes);
 
 // Passport middleware
 app.use(session({

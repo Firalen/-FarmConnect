@@ -36,6 +36,10 @@ const orderSchema = new mongoose.Schema({
     default: 'pending'
   },
   paymentMethod: { type: String, default: 'cash_on_delivery' },
+  paymentIntentId: { type: String },
+  transactionId: { type: String },
+  paymentAmount: { type: Number },
+  currency: { type: String, default: 'usd' },
   notes: { type: String },
   estimatedDelivery: { type: Date },
   deliveredAt: { type: Date },

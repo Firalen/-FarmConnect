@@ -20,6 +20,7 @@ import Admin from './pages/Admin';
 import ForgotPassword from './pages/ForgotPassword';
 import EmailVerification from './pages/EmailVerification';
 import AdminRoute from './components/AdminRoute';
+import Checkout from './pages/Checkout';
 
 
 function App() {
@@ -46,6 +47,7 @@ function App() {
                   <Route path="/admin" element={<AdminRoute><Admin /></AdminRoute>} />
                   <Route path="/forgot-password" element={<ForgotPassword />} />
                   <Route path="/verify-email/:token" element={<EmailVerification />} />
+                  <Route path="/checkout" element={<Checkout />} />
                 </Routes>
               </main>
               <Footer />
