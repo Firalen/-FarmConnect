@@ -8,6 +8,7 @@ const productSchema = new mongoose.Schema({
   unit: { type: String, default: 'kg' },
   location: { type: String, required: true },
   imageUrl: { type: String },
+  thumbnailUrl: { type: String },
   category: { type: String, required: true },
   isOrganic: { type: Boolean, default: false },
   isAvailable: { type: Boolean, default: true },

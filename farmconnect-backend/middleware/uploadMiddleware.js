@@ -1,6 +1,7 @@
 const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
+const { validateImage } = require('../utils/imageProcessor');
 
 // Ensure uploads directory exists
 const uploadsDir = path.join(__dirname, '../uploads');
@@ -20,31 +21,32 @@ const storage = multer.diskStorage({
   }
 });
 
-// File filter to only allow images
+// Enhanced file filter with better validation
 const fileFilter = (req, file, cb) => {
-  console.log('Processing file:', file.originalname, 'Type:', file.mimetype);
+  console.log('Processing file:', file.originalname, 'Type:', file.mimetype, 'Size:', file.size);
   
-  if (file.mimetype.startsWith('image/')) {
+  try {
+    validateImage(file);
     cb(null, true);
-  } else {
-    cb(new Error('Only image files are allowed!'), false);
+  } catch (error) {
+    cb(error, false);
   }
 };
 
-// Configure multer
+// Configure multer with increased file size limit
 const upload = multer({
   storage: storage,
   limits: {
-    fileSize: 5 * 1024 * 1024, // 5MB limit
+    fileSize: 10 * 1024 * 1024, // 10MB limit
   },
   fileFilter: fileFilter
 });
 
-// Error handling middleware
+// Enhanced error handling middleware
 const handleUploadError = (err, req, res, next) => {
   if (err instanceof multer.MulterError) {
     if (err.code === 'LIMIT_FILE_SIZE') {
-      return res.status(400).json({ message: 'File too large. Maximum size is 5MB.' });
+      return res.status(400).json({ message: 'File too large. Maximum size is 10MB.' });
     }
     return res.status(400).json({ message: `Upload error: ${err.message}` });
   } else if (err) {
