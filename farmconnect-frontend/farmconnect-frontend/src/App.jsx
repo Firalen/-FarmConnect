@@ -2,6 +2,7 @@ import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
 import { CartProvider } from './context/CartContext';
+import { ChatProvider } from './context/ChatContext';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
 import Home from './pages/Home';
@@ -18,37 +19,40 @@ import Cart from './pages/Cart';
 import Admin from './pages/Admin';
 import ForgotPassword from './pages/ForgotPassword';
 import EmailVerification from './pages/EmailVerification';
+import AdminRoute from './components/AdminRoute';
 
 
 function App() {
   return (
     <AuthProvider>
-      <CartProvider>
-        <Router>
-          <div className="App">
-            <Navbar />
-            <main>
-              <Routes>
-                <Route path="/" element={<Home />} />
-                <Route path="/login" element={<Login />} />
-                <Route path="/register" element={<Register />} />
-                <Route path="/dashboard" element={<Dashboard />} />
-                <Route path="/products" element={<Products />} />
-                <Route path="/products/:id" element={<ProductDetail />} />
-                <Route path="/add-product" element={<AddProduct />} />
-                <Route path="/chat" element={<Chat />} />
-                <Route path="/orders" element={<Orders />} />
-                <Route path="/articles" element={<Articles />} />
-                <Route path="/cart" element={<Cart />} />
-                <Route path="/admin" element={<Admin />} />
-                <Route path="/forgot-password" element={<ForgotPassword />} />
-                <Route path="/verify-email/:token" element={<EmailVerification />} />
-              </Routes>
-            </main>
-            <Footer />
-          </div>
-        </Router>
-      </CartProvider>
+      <ChatProvider>
+        <CartProvider>
+          <Router>
+            <div className="App">
+              <Navbar />
+              <main>
+                <Routes>
+                  <Route path="/" element={<Home />} />
+                  <Route path="/login" element={<Login />} />
+                  <Route path="/register" element={<Register />} />
+                  <Route path="/dashboard" element={<Dashboard />} />
+                  <Route path="/products" element={<Products />} />
+                  <Route path="/products/:id" element={<ProductDetail />} />
+                  <Route path="/add-product" element={<AddProduct />} />
+                  <Route path="/chat" element={<Chat />} />
+                  <Route path="/orders" element={<Orders />} />
+                  <Route path="/articles" element={<Articles />} />
+                  <Route path="/cart" element={<Cart />} />
+                  <Route path="/admin" element={<AdminRoute><Admin /></AdminRoute>} />
+                  <Route path="/forgot-password" element={<ForgotPassword />} />
+                  <Route path="/verify-email/:token" element={<EmailVerification />} />
+                </Routes>
+              </main>
+              <Footer />
+            </div>
+          </Router>
+        </CartProvider>
+      </ChatProvider>
     </AuthProvider>
   );
 }

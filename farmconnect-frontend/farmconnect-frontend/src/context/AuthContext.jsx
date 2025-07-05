@@ -124,6 +124,16 @@ export const AuthProvider = ({ children }) => {
     return user.name ? user.name.charAt(0).toUpperCase() : user.email?.charAt(0).toUpperCase() || 'U';
   };
 
+  // Helper function to check if user is admin
+  const isAdmin = () => {
+    return user && user.role === 'admin';
+  };
+
+  // Helper function to check if user has specific role
+  const hasRole = (role) => {
+    return user && user.role === role;
+  };
+
   const value = {
     user,
     loading,
@@ -134,6 +144,8 @@ export const AuthProvider = ({ children }) => {
     updateProfile,
     clearError,
     isAuthenticated: !!user,
+    isAdmin,
+    hasRole,
     getUserDisplayName,
     getUserInitial,
   };

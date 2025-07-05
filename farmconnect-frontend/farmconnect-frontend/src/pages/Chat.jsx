@@ -1,9 +1,11 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { messagesAPI, usersAPI } from '../services/api';
+import { useChat } from '../context/ChatContext';
 
 const Chat = () => {
   const { user, isAuthenticated } = useAuth();
+  const { socket, sendMessage: socketSendMessage, sendTyping, sendStopTyping, typingUsers } = useChat();
   const [conversations, setConversations] = useState([]);
   const [selectedConversation, setSelectedConversation] = useState(null);
   const [messages, setMessages] = useState([]);
@@ -15,6 +17,8 @@ const Chat = () => {
   const [searchUser, setSearchUser] = useState('');
   const [filteredUsers, setFilteredUsers] = useState([]);
   const messagesEndRef = useRef(null);
+  const [isTyping, setIsTyping] = useState(false);
+  const typingTimeoutRef = useRef(null);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -40,6 +44,31 @@ const Chat = () => {
   useEffect(() => {
     filterUsers();
   }, [users, searchUser]);
+
+  useEffect(() => {
+    if (socket) {
+      // Listen for new messages
+      socket.on('receive_message', (data) => {
+        if (selectedConversation && data.conversationId === selectedConversation._id) {
+          setMessages(prev => [...prev, data.message]);
+        }
+        // Refresh conversations to show latest message
+        fetchConversations();
+      });
+
+      socket.on('message_sent', (data) => {
+        // Message was sent successfully, refresh messages
+        if (selectedConversation && data.conversationId === selectedConversation._id) {
+          fetchMessages(selectedConversation._id);
+        }
+      });
+
+      return () => {
+        socket.off('receive_message');
+        socket.off('message_sent');
+      };
+    }
+  }, [socket, selectedConversation]);
 
   const fetchConversations = async () => {
     try {
@@ -95,6 +124,26 @@ const Chat = () => {
     }
   };
 
+  const handleTyping = () => {
+    if (!isTyping && selectedConversation) {
+      setIsTyping(true);
+      sendTyping(selectedConversation.participant._id);
+    }
+
+    // Clear existing timeout
+    if (typingTimeoutRef.current) {
+      clearTimeout(typingTimeoutRef.current);
+    }
+
+    // Set new timeout
+    typingTimeoutRef.current = setTimeout(() => {
+      setIsTyping(false);
+      if (selectedConversation) {
+        sendStopTyping(selectedConversation.participant._id);
+      }
+    }, 1000);
+  };
+
   const sendMessage = async (e) => {
     e.preventDefault();
     if (!newMessage.trim() || !selectedConversation) return;
@@ -107,11 +156,22 @@ const Chat = () => {
         conversationId: selectedConversation._id
       };
 
+      // Send via Socket.IO for real-time delivery
+      socketSendMessage(messageData);
+      
+      // Also send via API to save to database
       await messagesAPI.create(messageData);
+      
       setNewMessage('');
       
-      // Refresh messages
-      fetchMessages(selectedConversation._id);
+      // Stop typing indicator
+      setIsTyping(false);
+      if (typingTimeoutRef.current) {
+        clearTimeout(typingTimeoutRef.current);
+      }
+      if (selectedConversation) {
+        sendStopTyping(selectedConversation.participant._id);
+      }
     } catch (error) {
       console.error('Error sending message:', error);
     } finally {
@@ -355,6 +415,16 @@ const Chat = () => {
                             </div>
                           );
                         })}
+                        {typingUsers[selectedConversation?.participant._id] && (
+                          <div className="flex items-center space-x-2 text-gray-500 text-sm italic p-2">
+                            <div className="flex space-x-1">
+                              <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></div>
+                              <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
+                              <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
+                            </div>
+                            <span>{selectedConversation.participant.name} is typing...</span>
+                          </div>
+                        )}
                         <div ref={messagesEndRef} />
                       </div>
                     )}
@@ -366,7 +436,10 @@ const Chat = () => {
                       <input
                         type="text"
                         value={newMessage}
-                        onChange={(e) => setNewMessage(e.target.value)}
+                        onChange={(e) => {
+                          setNewMessage(e.target.value);
+                          handleTyping();
+                        }}
                         placeholder="Type your message..."
                         className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
                         disabled={sending}

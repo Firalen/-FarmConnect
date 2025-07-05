@@ -153,6 +153,15 @@ exports.sendMessage = async (req, res) => {
       $inc: { [`unreadCount.${receiverId}`]: 1 }
     });
 
+    // Emit real-time event
+    const io = req.app.get('io');
+    if (io) {
+      io.to(`user_${receiverId}`).emit('receive_message', {
+        message,
+        conversationId: conversation._id
+      });
+    }
+
     res.status(201).json(message);
   } catch (err) {
     console.error('Error sending message:', err);
@@ -215,6 +224,56 @@ exports.deleteMessage = async (req, res) => {
     
     await message.deleteOne();
     res.json({ message: 'Message deleted' });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
+// Create a new message
+exports.createMessage = async (req, res) => {
+  try {
+    const { content, receiverId, conversationId } = req.body;
+    const senderId = req.user._id;
+
+    if (!content || !receiverId) {
+      return res.status(400).json({ message: 'Content and receiverId are required' });
+    }
+
+    let conversation;
+    if (conversationId) {
+      conversation = await Conversation.findById(conversationId);
+      if (!conversation) {
+        return res.status(404).json({ message: 'Conversation not found' });
+      }
+    } else {
+      // Create new conversation if it doesn't exist
+      conversation = await Conversation.findOneAndUpdate(
+        { participants: { $all: [senderId, receiverId] } },
+        { participants: [senderId, receiverId] },
+        { upsert: true, new: true }
+      );
+    }
+
+    const message = await Message.create({
+      sender: senderId,
+      receiver: receiverId,
+      content,
+      conversationId: conversation._id,
+    });
+
+    await message.populate('sender', 'name email');
+    await message.populate('receiver', 'name email');
+
+    // Emit real-time event
+    const io = req.app.get('io');
+    if (io) {
+      io.to(`user_${receiverId}`).emit('receive_message', {
+        message,
+        conversationId: conversation._id
+      });
+    }
+
+    res.status(201).json(message);
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
