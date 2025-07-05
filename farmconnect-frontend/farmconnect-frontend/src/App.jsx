@@ -17,6 +17,7 @@ import Articles from './pages/Articles';
 import Cart from './pages/Cart';
 import Admin from './pages/Admin';
 import ForgotPassword from './pages/ForgotPassword';
+import EmailVerification from './pages/EmailVerification';
 
 
 function App() {
@@ -41,6 +42,7 @@ function App() {
                 <Route path="/cart" element={<Cart />} />
                 <Route path="/admin" element={<Admin />} />
                 <Route path="/forgot-password" element={<ForgotPassword />} />
+                <Route path="/verify-email/:token" element={<EmailVerification />} />
               </Routes>
             </main>
             <Footer />

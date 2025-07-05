@@ -15,6 +15,7 @@ exports.register = async (req, res) => {
       return res.status(400).json({ message: 'User already exists' });
     }
     const hashedPassword = await bcrypt.hash(password, 10);
+    const emailVerificationToken = crypto.randomBytes(32).toString('hex');
     const user = await User.create({
       name,
       email,
@@ -23,7 +24,11 @@ exports.register = async (req, res) => {
       location,
       phoneNumber,
       profileImage,
+      emailVerificationToken,
+      emailVerificationExpires: Date.now() + 24 * 60 * 60 * 1000, // 24 hours
     });
+    // TODO: Send verification email (placeholder)
+    // e.g., `http://localhost:5000/api/users/verify-email/${emailVerificationToken}`
     const token = jwt.sign(
       { id: user._id, role: user.role }, 
       process.env.JWT_SECRET || 'your-super-secret-jwt-key-change-this-in-production', 
@@ -37,7 +42,9 @@ exports.register = async (req, res) => {
       location: user.location,
       phoneNumber: user.phoneNumber,
       profileImage: user.profileImage,
+      isEmailVerified: user.isEmailVerified,
       token,
+      message: 'Please check your email to verify your account.',
     });
   } catch (err) {
     res.status(500).json({ message: err.message });
@@ -173,6 +180,27 @@ exports.resetPassword = async (req, res) => {
     user.resetPasswordExpires = undefined;
     await user.save();
     res.json({ message: 'Password has been reset' });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
+// Verify email
+exports.verifyEmail = async (req, res) => {
+  try {
+    const { token } = req.params;
+    const user = await User.findOne({
+      emailVerificationToken: token,
+      emailVerificationExpires: { $gt: Date.now() },
+    });
+    if (!user) {
+      return res.status(400).json({ message: 'Invalid or expired verification token' });
+    }
+    user.isEmailVerified = true;
+    user.emailVerificationToken = undefined;
+    user.emailVerificationExpires = undefined;
+    await user.save();
+    res.json({ message: 'Email verified successfully' });
   } catch (err) {
     res.status(500).json({ message: err.message });
   }

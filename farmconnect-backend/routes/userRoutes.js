@@ -44,5 +44,7 @@ router.get('/auth/facebook/callback', passport.authenticate('facebook', { failur
 router.post('/forgot-password', userController.forgotPassword);
 // Reset password
 router.post('/reset-password/:token', userController.resetPassword);
+// Verify email
+router.get('/verify-email/:token', userController.verifyEmail);
 
 module.exports = router; 
